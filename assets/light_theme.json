@@ -1,5 +1,9 @@
 {
   "applyElevationOverlayColor": false,
+  "appBarTheme": {
+    "backgroundColor": "#fff5fbf5",
+    "foregroundColor": "#ff171d1a"
+  },
   "brightness": "light",
   "buttonTheme": {
     "alignedDropdown": false,

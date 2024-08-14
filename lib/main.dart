@@ -75,23 +75,12 @@ List<TrackData> data = List.generate(10, (i) {
 });
 List<TrackData> incomeData = [];
 List<TrackData> expenseData = [];
-List<Widget> views = [
-  ViewBootStrap(IncomeView(incomeData)),
-  ViewBootStrap(ExpenseView())
-];
-filtering() {
-  List<TrackCategory> filter = store['category'] as List<TrackCategory>;
-  for (TrackData e in data) {
-    if (filter.contains(e.category)) {
-      if (e.isExpense()) {
-        incomeData.add(e);
-      } else {
-        expenseData.add(e);
-      }
-    }
+
+List<TrackData> getData(e) {
+  if (e == TrackType.income) {
+    return incomeData;
   }
-  views[0] = ViewBootStrap(IncomeView(incomeData));
-  views[1] = const ViewBootStrap(ExpenseView());
+  return expenseData;
 }
 
 class _AppContainerState extends State<AppContainer> {
@@ -99,8 +88,15 @@ class _AppContainerState extends State<AppContainer> {
   @override
   void initState() {
     super.initState();
-    filtering();
   }
+  // TODO: Add Tags to tracks
+  // By adding a checkbox for adding tags in "New Track Modal"
+  // - add an ability to add a tags and groups and collections
+  // - add an ability to add custom filters to user's prefrenced
+  // - add a comment for expense or income
+  // - add a level of importance (Importance Rate) in modal and add an ability to just ignore it
+  // - Monthly log & Weekly log for expenses and incomes
+  // - suggest what to expenses to avoid by "Importance Rate"
 
   List<IconButton> items(BuildContext context) {
     ButtonStyle buttonStyle = ButtonStyle(
@@ -181,7 +177,10 @@ class _AppContainerState extends State<AppContainer> {
             index = i;
           });
         },
-        children: views,
+        children: [
+          ViewBootStrap(IncomeView(getData(TrackType.income))),
+          const ViewBootStrap(ExpenseView())
+        ],
       ),
       bottomNavigationBar: SafeArea(
           key: const Key('Navigation Safe Area'),

@@ -2,6 +2,8 @@ import 'package:finance_tracker/main.dart';
 import 'package:finance_tracker/utils/track.dart';
 import 'package:flutter/material.dart';
 
+List<TrackCategory> filter = [];
+
 class FilterTracks extends StatefulWidget {
   const FilterTracks({super.key});
 
@@ -12,10 +14,35 @@ class FilterTracks extends StatefulWidget {
 class _FilterTracksState extends State<FilterTracks> {
   List<bool> isSelected = List.generate(4, (i) => i == 0 ? true : false);
   int manySelected = 3;
+  void doFilter() {
+    setState(() {
+      incomeData.clear();
+      expenseData.clear();
+      for (var i in data) {
+        if (filter.contains(i.category)) {
+          switch (i.type) {
+            case TrackType.income:
+              {
+                incomeData.add(i);
+                break;
+              }
+            default:
+              {
+                expenseData.add(i);
+              }
+          }
+        }
+        continue;
+      }
+      print(incomeData);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    store['catergory'] = isSelected;
+    filter.addAll(TrackCategory.values);
+    doFilter();
   }
 
   @override
@@ -59,7 +86,12 @@ class _FilterTracksState extends State<FilterTracks> {
                     List<bool> newList = List.filled(4, false);
                     newList[0] = true;
                     isSelected = newList;
-                    store['catergory'] = TrackCategory.values;
+                    filter = TrackCategory.values;
+                  } else {
+                    if (isSelected.where((e) => e == false).length > 3) {
+                      isSelected[i] = true;
+                    }
+                    isSelected[0] = false;
                   }
                   if (isSelected[0] == true && i != 0) {
                     isSelected[0] = false;
@@ -67,6 +99,9 @@ class _FilterTracksState extends State<FilterTracks> {
                   if (manySelected > 3) {
                     isSelected[i] = true;
                     manySelected = 3;
+                  }
+                  if (manySelected < 1) {
+                    isSelected[i] = true;
                   }
                   List<TrackCategory> result = [];
                   if (isSelected.indexOf(true) != 0 &&
@@ -89,9 +124,11 @@ class _FilterTracksState extends State<FilterTracks> {
                         }
                       }
                     }
-                    store['catergory'] = result;
-                    filtering();
+                  } else {
+                    result = TrackCategory.values;
                   }
+                  filter = result;
+                  doFilter();
                 });
               },
             );
