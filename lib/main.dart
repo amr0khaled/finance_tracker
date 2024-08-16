@@ -1,9 +1,10 @@
 import 'package:finance_tracker/components/filter_tracks.dart';
 import 'package:finance_tracker/components/searchbar.dart';
-import 'package:finance_tracker/utils/track.dart';
+import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:json_theme/json_theme.dart';
@@ -14,6 +15,19 @@ import 'package:finance_tracker/views/modal_form.dart';
 import 'package:finance_tracker/views/income_view.dart';
 import 'package:finance_tracker/views/expense_view.dart';
 import 'package:finance_tracker/views/view.dart';
+
+List<TrackState> data = List.generate(10, (i) {
+  i++;
+  TrackState data = TrackState(
+      title: 'Income $i',
+      value: 123,
+      type: random.nextInt(2) == 1 ? TrackType.income : TrackType.expense,
+      category: rand(),
+      description: '''
+            This is a test description and i use it to develope the Ui i designed to put it on my portfolio
+            ''');
+  return data;
+});
 
 void main() async {
   FlutterError.onError = (details) {
@@ -30,11 +44,11 @@ void main() async {
 
   final darkTheme = ThemeDecoder.decodeThemeData(darkThemeJson)!;
   final theme = ThemeDecoder.decodeThemeData(themeJson)!;
-
-  runApp(MyApp(theme: theme, darkTheme: darkTheme));
+  runApp(BlocProvider(
+      create: (_) =>
+          TrackCollectionBloc(TrackCollectionState('global', data: data)),
+      child: MyApp(theme: theme, darkTheme: darkTheme)));
 }
-
-Map<String, dynamic> store = {};
 
 class MyApp extends StatelessWidget {
   final ThemeData theme;
@@ -42,7 +56,6 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.theme, required this.darkTheme});
   @override
   Widget build(BuildContext context) {
-    store['category'] = TrackCategory.values;
     return MaterialApp(
       title: 'Finance Tracker',
       theme: theme,
@@ -61,22 +74,10 @@ class AppContainer extends StatefulWidget {
   State<AppContainer> createState() => _AppContainerState();
 }
 
-List<TrackData> data = List.generate(10, (i) {
-  i++;
-  TrackData data = TrackData(
-      name: 'Income $i',
-      value: 123,
-      type: random.nextInt(2) == 1 ? TrackType.income : TrackType.expense,
-      category: rand(),
-      description: '''
-            This is a test description and i use it to develope the Ui i designed to put it on my portfolio
-            ''');
-  return data;
-});
-List<TrackData> incomeData = [];
-List<TrackData> expenseData = [];
+List<TrackState> incomeData = [];
+List<TrackState> expenseData = [];
 
-List<TrackData> getData(e) {
+List<TrackState> getData(e) {
   if (e == TrackType.income) {
     return incomeData;
   }
@@ -157,77 +158,118 @@ class _AppContainerState extends State<AppContainer> {
       PageController(keepPage: true, initialPage: 0, viewportFraction: 0.9999);
   @override
   Widget build(BuildContext context) {
+    final bloc = context.select((TrackCollectionBloc e) => e.state.getTracks());
     Size screen = MediaQuery.sizeOf(context);
     double navigationSideMargin = screen.width * 0.05;
     double navigationBottomMargin = navigationSideMargin * 0.5;
-    return Scaffold(
-      appBar: PreferredSize(
-          preferredSize: Size(screen.width, 56 + 12 + 24 + 32),
-          child: const Column(
-            children: [
-              SearchBarWidget(),
-              FilterTracks(),
-            ],
-          )),
-      body: PageView(
-        controller: control,
-        pageSnapping: true,
-        onPageChanged: (i) {
-          setState(() {
-            index = i;
-          });
-        },
-        children: [
-          ViewBootStrap(IncomeView(getData(TrackType.income))),
-          const ViewBootStrap(ExpenseView())
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-          key: const Key('Navigation Safe Area'),
-          child: Container(
-              margin: EdgeInsets.fromLTRB(navigationSideMargin, 0,
-                  navigationSideMargin, navigationBottomMargin),
-              key: const Key('Navigation Container'),
-              decoration: const BoxDecoration(
-                color: Colors.transparent,
-              ),
-              transformAlignment: Alignment.center,
-              width: screen.width,
-              height: 64.0,
-              child: SizedBox(
-                  key: const Key('Navigation Sized Box'),
-                  width: screen.width - (screen.width * 0.1),
-                  height: 64.0,
-                  child: DecoratedBox(
-                      key: const Key('Navigation Decorated Box'),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(24)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: items(context),
-                      ))))),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
-        onPressed: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ModalForm(),
-                fullscreenDialog: true,
-                allowSnapshotting: true,
-                maintainState: true,
-              ));
-        },
-        elevation: 5,
-        enableFeedback: true,
-        tooltip: 'Add Expense',
-        child: Icon(Icons.add,
-            color: Theme.of(context).colorScheme.onTertiaryContainer),
+    return BlocProvider(
+      create: (context) => BlocProvider.of<TrackCollectionBloc>(context),
+      child: Scaffold(
+        appBar: PreferredSize(
+            preferredSize: Size(screen.width, 56 + 12 + 24 + 32),
+            child: const Column(
+              children: [
+                SearchBarWidget(),
+                FilterTracks(),
+              ],
+            )),
+        body: PageView(
+          controller: control,
+          pageSnapping: true,
+          onPageChanged: (i) {
+            setState(() {
+              index = i;
+            });
+          },
+          children: [
+            ViewBootStrap(IncomeView(bloc)),
+            const ViewBootStrap(ExpenseView())
+          ],
+        ),
+        bottomNavigationBar: SafeArea(
+            key: const Key('Navigation Safe Area'),
+            child: Container(
+                margin: EdgeInsets.fromLTRB(navigationSideMargin, 0,
+                    navigationSideMargin, navigationBottomMargin),
+                key: const Key('Navigation Container'),
+                decoration: const BoxDecoration(
+                  color: Colors.transparent,
+                ),
+                transformAlignment: Alignment.center,
+                width: screen.width,
+                height: 64.0,
+                child: SizedBox(
+                    key: const Key('Navigation Sized Box'),
+                    width: screen.width - (screen.width * 0.1),
+                    height: 64.0,
+                    child: DecoratedBox(
+                        key: const Key('Navigation Decorated Box'),
+                        decoration: BoxDecoration(
+                          color:
+                              Theme.of(context).colorScheme.secondaryContainer,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(24)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: items(context),
+                        ))))),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider.value(
+                      value: BlocProvider.of<TrackCollectionBloc>(context),
+                      child: const ModalForm()),
+                  fullscreenDialog: true,
+                  allowSnapshotting: true,
+                  maintainState: true,
+                ));
+          },
+          elevation: 5,
+          enableFeedback: true,
+          tooltip: 'Add Expense',
+          child: Icon(Icons.add,
+              color: Theme.of(context).colorScheme.onTertiaryContainer),
+        ),
       ),
     );
   }
 }
+
+
+
+
+/*
+*
+*
+*
+*
+*MultiBlocListener(
+        listeners: [
+          BlocListener<TrackCollectionBloc, TrackCollectionState>(
+              listenWhen: (p, n) => p.status != n.status,
+              listener: (context, state) {
+                if (state.status == TrackCreationStatus.failure) {
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(const SnackBar(content: Text('Erorr')));
+                }
+              }),
+          BlocListener<TrackCollectionBloc, TrackCollectionState>(
+              listenWhen: (p, n) => p.data != n.data,
+              listener: (context, state) {
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(const SnackBar(content: Text('Done')));
+              }),
+        ],
+        child: const AppContainer(title: 'Finance Tracker'),
+      )
+*
+*
+*
+*/

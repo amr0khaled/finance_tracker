@@ -1,35 +1,30 @@
 import 'dart:math';
 
 import 'package:finance_tracker/components/card.dart';
-import 'package:finance_tracker/utils/track.dart';
+import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class IncomeView extends StatefulWidget {
+class IncomeView extends StatelessWidget {
   const IncomeView(this.data, {super.key});
-  final List<TrackData> data;
-
-  @override
-  State<IncomeView> createState() => _IncomeViewState();
-}
-
-class _IncomeViewState extends State<IncomeView> {
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    print('true');
-  }
+  final List<TrackState> data;
 
   @override
   Widget build(BuildContext context) {
-    print("IncomeView ${widget.data}");
-    return ListView(
-        children: List.generate(widget.data.length, (i) {
-      final TrackCard card = TrackCard(widget.data[i]);
-      if (i == 0) {
-        return Padding(padding: const EdgeInsets.only(top: 12), child: card);
-      }
-      return card;
-    }));
+    return BlocBuilder<TrackCollectionBloc, TrackCollectionState>(
+        builder: (context, state) {
+      final bloc = context.watch<TrackCollectionBloc>();
+      print('bloc: ${bloc.state.status}');
+      print('state: ${state.status}');
+      return ListView(
+          children: List.generate(state.data.length, (i) {
+        final TrackCard card = TrackCard(state.data[i]);
+        if (i == 0) {
+          return Padding(padding: const EdgeInsets.only(top: 12), child: card);
+        }
+        return card;
+      }));
+    });
   }
 }
 

@@ -1,4 +1,6 @@
+import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:unicons/unicons.dart';
 
@@ -12,6 +14,8 @@ class SearchBarWidget extends StatefulWidget {
 class _SearchBarWidgetState extends State<SearchBarWidget> {
   @override
   Widget build(BuildContext context) {
+    final bloc = context.watch<TrackCollectionBloc>();
+
     Size screen = MediaQuery.sizeOf(context);
     double barSide = screen.width * 0.05;
     double barTop = 12;
@@ -40,6 +44,9 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                 SizedBox(
                     width: barWidth - 64 - 64,
                     child: TextFormField(
+                      onChanged: (value) {
+                        bloc.add(TrackCollectionFilteringEvent(value));
+                      },
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         hintText: 'Search',

@@ -1,4 +1,4 @@
-import 'package:finance_tracker/utils/track.dart';
+import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 
 typedef TrackName = String;
 typedef TrackValue = int;
@@ -6,18 +6,14 @@ typedef TrackDesc = String;
 
 abstract class TrackApi {
   TrackApi();
-
   // Get Tracks of collection
-  TrackData getTrack(TrackId id);
+  TrackState getTrack(TrackId id);
 
   // Remove Track
   Future<void> removeTrack(TrackId id);
 
   // Add Track
-  Future<void> addTrack(TrackData track);
-
-  // Edit Track
-  Future<void> editTrack(TrackId id, TrackEditData edit);
+  Future<void> addTrack(TrackState track);
 }
 
 class TrackNotFoundException implements Exception {}

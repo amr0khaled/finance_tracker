@@ -1,5 +1,5 @@
 import 'package:finance_tracker/components/card.dart';
-import 'package:finance_tracker/utils/track.dart';
+import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:finance_tracker/views/income_view.dart';
 import 'package:flutter/material.dart';
 
@@ -18,8 +18,8 @@ class _ExpenseViewState extends State<ExpenseView> {
     super.initState();
     cards = List<Widget>.generate(10, (i) {
       i++;
-      final TrackCard card = TrackCard(TrackData(
-          name: 'Expense $i',
+      final TrackCard card = TrackCard(TrackState(
+          title: 'Expense $i',
           value: 123,
           type: random.nextInt(2) == 1 ? TrackType.income : TrackType.expense,
           category: rand(),

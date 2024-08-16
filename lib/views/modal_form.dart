@@ -1,5 +1,37 @@
+import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+TrackType intToType(int value) {
+  switch (value) {
+    case 1:
+      {
+        return TrackType.expense;
+      }
+    default:
+      {
+        return TrackType.income;
+      }
+  }
+}
+
+TrackCategory intToCategory(int value) {
+  switch (value) {
+    case 1:
+      {
+        return TrackCategory.home;
+      }
+    case 2:
+      {
+        return TrackCategory.work;
+      }
+    default:
+      {
+        return TrackCategory.personal;
+      }
+  }
+}
 
 class ModalForm extends StatefulWidget {
   const ModalForm({super.key});
@@ -18,8 +50,8 @@ class _ModalForm extends State<ModalForm> {
     return OutlineInputBorder(borderRadius: borderRadius);
   }
 
-  String name = '';
-  int value = 0;
+  String title = '';
+  int formValue = 0;
   String des = '';
   bool isIncome = true;
   List<String> radios = ['Income', 'Expense'];
@@ -35,6 +67,7 @@ class _ModalForm extends State<ModalForm> {
     FocusNode(),
     FocusNode(),
   ];
+
   @override
   Widget build(BuildContext context) {
     Size screen = MediaQuery.of(context).size;
@@ -61,12 +94,12 @@ class _ModalForm extends State<ModalForm> {
                 children: [
                   TextFormField(
                     onChanged: (String value) {
-                      print(value);
+                      title = value;
                     },
                     maxLines: 1,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Enter Finance Name';
+                        return 'Enter Finance title';
                       }
                       return null;
                     },
@@ -75,7 +108,7 @@ class _ModalForm extends State<ModalForm> {
                       border: border(),
                       errorBorder:
                           border(Theme.of(context).colorScheme.onError),
-                      label: const Text('Track Name'),
+                      label: const Text('Track title'),
                     ),
                     focusNode: focusNodes[0],
                     onTapOutside: (e) {
@@ -86,7 +119,9 @@ class _ModalForm extends State<ModalForm> {
                       padding: const EdgeInsets.symmetric(
                           vertical: 24, horizontal: 0),
                       child: TextFormField(
-                        onChanged: (value) {},
+                        onChanged: (value) {
+                          formValue = int.parse(value);
+                        },
                         maxLines: 1,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -113,11 +148,15 @@ class _ModalForm extends State<ModalForm> {
                         },
                       )),
                   TextFormField(
-                    onChanged: (value) {},
+                    onChanged: (value) {
+                      setState(() {
+                        des = value;
+                      });
+                    },
                     maxLines: 4,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Enter Finance Name';
+                        return 'Enter Finance Title';
                       }
                       return null;
                     },
@@ -177,6 +216,15 @@ class _ModalForm extends State<ModalForm> {
                       )),
                   IconButton(
                     onPressed: () {
+                      TrackState newTrack = TrackState(
+                          title: title,
+                          value: formValue,
+                          description: des,
+                          type: intToType(radioValue),
+                          category: intToCategory(catRadioValue));
+                      context
+                          .read<TrackCollectionBloc>()
+                          .add(TrackCollectionAddTrackEvent(newTrack));
                       Navigator.of(context).pop();
                     },
                     constraints: const BoxConstraints(maxWidth: 383),

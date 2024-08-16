@@ -1,4 +1,4 @@
-import 'package:finance_tracker/utils/track.dart';
+import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -14,7 +14,7 @@ bool descOpen = false;
 
 class TrackCard extends StatefulWidget {
   const TrackCard(this.data, {super.key});
-  final TrackData data;
+  final TrackState data;
 
   @override
   State<TrackCard> createState() => _TrackCardState();
@@ -62,7 +62,7 @@ class _TrackCardState extends State<TrackCard> {
                           iconSize: 24),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(widget.data.name,
+                    child: Text(widget.data.title,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w500,
