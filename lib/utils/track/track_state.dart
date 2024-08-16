@@ -23,9 +23,10 @@ class TrackState extends Equatable {
       this.value = 0,
       this.category = TrackCategory.personal,
       this.description = '',
-      this.status = TrackCreationStatus.initial}) {
+      this.status = TrackCreationStatus.initial,
+      TrackId? id}) {
     // TODO: change Id to UUID V4
-    _id = title + title;
+    _id = id ?? const Uuid().v8();
   }
   TrackId get id => _id;
   TrackState copyWith(

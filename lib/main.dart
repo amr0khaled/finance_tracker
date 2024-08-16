@@ -1,5 +1,7 @@
+import 'package:finance_tracker/components/card.dart';
 import 'package:finance_tracker/components/filter_tracks.dart';
 import 'package:finance_tracker/components/searchbar.dart';
+import 'package:finance_tracker/utils/domain_layer/track_storage.dart';
 import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,27 +17,19 @@ import 'package:finance_tracker/views/modal_form.dart';
 import 'package:finance_tracker/views/income_view.dart';
 import 'package:finance_tracker/views/expense_view.dart';
 import 'package:finance_tracker/views/view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-List<TrackState> data = List.generate(10, (i) {
-  i++;
-  TrackState data = TrackState(
-      title: 'Income $i',
-      value: 123,
-      type: random.nextInt(2) == 1 ? TrackType.income : TrackType.expense,
-      category: rand(),
-      description: '''
-            This is a test description and i use it to develope the Ui i designed to put it on my portfolio
-            ''');
-  return data;
-});
-
-void main() async {
+Future<void> main() async {
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     if (kReleaseMode) exit(1);
   };
 
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialinzing Local storage
+  final localStorage = TrackStorage(await SharedPreferences.getInstance());
+
+  // Initializing theme from JSON
   final darkThemeSrc = await rootBundle.loadString('assets/dark_theme.json');
   final themeSrc = await rootBundle.loadString('assets/light_theme.json');
 
@@ -44,10 +38,29 @@ void main() async {
 
   final darkTheme = ThemeDecoder.decodeThemeData(darkThemeJson)!;
   final theme = ThemeDecoder.decodeThemeData(themeJson)!;
-  runApp(BlocProvider(
-      create: (_) =>
-          TrackCollectionBloc(TrackCollectionState('global', data: data)),
-      child: MyApp(theme: theme, darkTheme: darkTheme)));
+  // Add localStorage Repo to provider
+  runApp(RepositoryProvider.value(
+    value: localStorage,
+    child: BlocProvider(
+      create: (_) => TrackCollectionBloc(localStorage),
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<TrackCollectionBloc, TrackCollectionState>(
+              listenWhen: (previous, current) =>
+                  previous.status != current.status ||
+                  previous.data.length != current.data.length ||
+                  previous.name != current.name,
+              listener: (context, state) {
+                if (state.status == TrackCreationStatus.failure) {
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar(context,
+                      title: 'Error in listener', onPressed: () {}));
+                }
+              })
+        ],
+        child: MyApp(theme: theme, darkTheme: darkTheme),
+      ),
+    ),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -56,6 +69,9 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.theme, required this.darkTheme});
   @override
   Widget build(BuildContext context) {
+    context
+        .read<TrackCollectionBloc>()
+        .add(const TrackCollectionGetDataEvent());
     return MaterialApp(
       title: 'Finance Tracker',
       theme: theme,
@@ -158,7 +174,6 @@ class _AppContainerState extends State<AppContainer> {
       PageController(keepPage: true, initialPage: 0, viewportFraction: 0.9999);
   @override
   Widget build(BuildContext context) {
-    final bloc = context.select((TrackCollectionBloc e) => e.state.getTracks());
     Size screen = MediaQuery.sizeOf(context);
     double navigationSideMargin = screen.width * 0.05;
     double navigationBottomMargin = navigationSideMargin * 0.5;
@@ -181,9 +196,9 @@ class _AppContainerState extends State<AppContainer> {
               index = i;
             });
           },
-          children: [
-            ViewBootStrap(IncomeView(bloc)),
-            const ViewBootStrap(ExpenseView())
+          children: const [
+            ViewBootStrap(IncomeView()),
+            ViewBootStrap(ExpenseView())
           ],
         ),
         bottomNavigationBar: SafeArea(

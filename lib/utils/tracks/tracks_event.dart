@@ -19,6 +19,24 @@ class TrackEditEvent extends TrackEvent {
 
 // Collection Events
 
+class TrackCollectionUndoTrackEvent extends TrackEvent {
+  const TrackCollectionUndoTrackEvent();
+  @override
+  List<Object?> get props => [];
+}
+
+class TrackCollectionPushDataEvent extends TrackEvent {
+  const TrackCollectionPushDataEvent();
+  @override
+  List<Object?> get props => [];
+}
+
+class TrackCollectionGetDataEvent extends TrackEvent {
+  const TrackCollectionGetDataEvent();
+  @override
+  List<Object?> get props => [];
+}
+
 class TrackCollectionFilteringEvent extends TrackEvent {
   final String search;
   const TrackCollectionFilteringEvent(this.search);

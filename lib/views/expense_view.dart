@@ -1,7 +1,7 @@
 import 'package:finance_tracker/components/card.dart';
 import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
-import 'package:finance_tracker/views/income_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ExpenseView extends StatefulWidget {
   const ExpenseView({super.key});
@@ -11,34 +11,26 @@ class ExpenseView extends StatefulWidget {
 }
 
 class _ExpenseViewState extends State<ExpenseView> {
-  late List<Widget> cards;
-
-  @override
-  void initState() {
-    super.initState();
-    cards = List<Widget>.generate(10, (i) {
-      i++;
-      final TrackCard card = TrackCard(TrackState(
-          title: 'Expense $i',
-          value: 123,
-          type: random.nextInt(2) == 1 ? TrackType.income : TrackType.expense,
-          category: rand(),
-          description: random.nextInt(2) == 1
-              ? ''
-              : '''
-            This is a test description and i use it to develope the Ui i designed to put it on my portfolio
-            '''));
-      if (i == 0) {
-        return Padding(padding: const EdgeInsets.only(top: 12), child: card);
-      }
-      return card;
-    });
-  }
+  List<TrackState> data = [];
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: cards,
-    );
+    return BlocBuilder<TrackCollectionBloc, TrackCollectionState>(
+        builder: (context, state) {
+      if (data.isEmpty) {
+        data = state.data.where((e) => e.type == TrackType.expense).toList();
+      }
+      if (state.status != TrackCreationStatus.initial) {
+        data = state.data.where((e) => e.type == TrackType.expense).toList();
+      }
+      return ListView(
+          children: List.generate(data.length, (i) {
+        final TrackCard card = TrackCard(data[i]);
+        if (i == 0) {
+          return Padding(padding: const EdgeInsets.only(top: 12), child: card);
+        }
+        return card;
+      }));
+    });
   }
 }

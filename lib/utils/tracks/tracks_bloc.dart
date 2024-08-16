@@ -1,7 +1,9 @@
 import 'package:equatable/equatable.dart';
+import 'package:finance_tracker/utils/domain_layer/track_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
 part 'tracks_state.dart';
 part 'tracks_event.dart';
 
@@ -38,14 +40,53 @@ class TrackBloc extends Bloc<TrackEvent, TrackState> {
 
 class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
   TrackCollectionState _state;
-  TrackCollectionBloc(TrackCollectionState state)
-      : _state = state,
-        super(TrackCollectionState('global', data: const [])) {
+  TrackStorage _repo;
+  TrackCollectionBloc(TrackStorage repo, {TrackCollectionState? state})
+      : _repo = repo,
+        _state = repo.getTrackCollection(),
+        super(repo.state ??
+            TrackCollectionState(state?.name ?? 'note',
+                data: state?.data ?? [])) {
+    // Undo Remove Data
+    on<TrackCollectionUndoTrackEvent>((event, emit) async {
+      emit(_state.copyWith(status: TrackCreationStatus.inProgress));
+      try {
+        await _state.undo();
+        emit(_state.copyWith(
+            status: TrackCreationStatus.done, data: _state.getTracks()));
+      } catch (e) {
+        emit(_state.copyWith(status: TrackCreationStatus.failure));
+      }
+    });
+    // Push Data
+    on<TrackCollectionPushDataEvent>((event, emit) async {
+      emit(_state.copyWith(status: TrackCreationStatus.inProgress));
+      try {
+        final data = _repo.getTrackCollection();
+        await _repo.setTrackCollection(data);
+        emit(_state.copyWith(status: TrackCreationStatus.done));
+      } catch (e) {
+        emit(_state.copyWith(status: TrackCreationStatus.failure));
+      }
+    });
+    // Get Data
+    on<TrackCollectionGetDataEvent>((event, emit) async {
+      emit(_state.copyWith(status: TrackCreationStatus.inProgress));
+      try {
+        final data = _repo.getTrackCollection();
+        await _state.addAllTracks(data.data);
+        emit(_state.copyWith(
+            status: TrackCreationStatus.done, data: _state.getTracks()));
+      } catch (e) {
+        emit(_state.copyWith(status: TrackCreationStatus.failure));
+      }
+    });
     // Add Track
     on<TrackCollectionAddTrackEvent>((event, emit) async {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));
       try {
         await _state.addTrack(event.track);
+        await _repo.setTrackCollection(_state);
         emit(_state.copyWith(
             status: TrackCreationStatus.done, data: _state.getTracks()));
       } catch (e) {
@@ -56,7 +97,9 @@ class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));
       try {
         await _state.addAllTracks(event.tracks);
-        emit(_state.copyWith(status: TrackCreationStatus.done));
+        await _repo.setTrackCollection(_state);
+        emit(_state.copyWith(
+            status: TrackCreationStatus.done, data: _state.getTracks()));
       } catch (e) {
         emit(_state.copyWith(status: TrackCreationStatus.failure));
       }
@@ -66,7 +109,8 @@ class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));
       try {
         await _state.remove(event.id);
-        emit(_state.copyWith(status: TrackCreationStatus.done));
+        emit(_state.copyWith(
+            status: TrackCreationStatus.done, data: _state.getTracks()));
       } catch (e) {
         emit(_state.copyWith(status: TrackCreationStatus.failure));
       }
@@ -76,7 +120,9 @@ class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));
       try {
         await _state.clear();
-        emit(_state.copyWith(status: TrackCreationStatus.done));
+        await _repo.setTrackCollection(_state);
+        emit(_state.copyWith(
+            status: TrackCreationStatus.done, data: _state.getTracks()));
       } catch (e) {
         emit(_state.copyWith(status: TrackCreationStatus.failure));
       }
@@ -104,11 +150,12 @@ class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
         emit(_state.copyWith(status: TrackCreationStatus.failure));
       }
     });
-    on<TrackCollectionEditEvent>((event, emit) {
+    on<TrackCollectionEditEvent>((event, emit) async {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));
       try {
         emit(_state.copyWith(
             status: TrackCreationStatus.done, name: event.name));
+        await _repo.setTrackCollection(_state);
       } catch (e) {
         emit(_state.copyWith(status: TrackCreationStatus.failure));
       }

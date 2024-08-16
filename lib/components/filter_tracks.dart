@@ -1,4 +1,3 @@
-import 'package:finance_tracker/main.dart';
 import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,14 +38,19 @@ class _FilterTracksState extends State<FilterTracks> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: List.generate(4, (i) {
               return IconButton(
-                icon: Text(
-                  filterNames[i],
+                icon: AnimatedDefaultTextStyle(
+                  duration: Durations.medium2,
+                  curve: Curves.linearToEaseOut,
                   style: TextStyle(
+                      fontFamily: 'Roboto',
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: isSelected[i]
                           ? Theme.of(context).colorScheme.onTertiary
                           : Theme.of(context).colorScheme.onSecondary),
+                  child: Text(
+                    filterNames[i],
+                  ),
                 ),
                 isSelected: isSelected[i],
                 padding:

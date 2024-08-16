@@ -67,6 +67,7 @@ class _ModalForm extends State<ModalForm> {
     FocusNode(),
     FocusNode(),
   ];
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -83,169 +84,170 @@ class _ModalForm extends State<ModalForm> {
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24, horizontal: 0),
                 child: Text(
-                  'New Finance Track Item',
+                  'Add New Transcition',
                   style: TextStyle(fontSize: 24),
                   textAlign: TextAlign.start,
                 ),
               ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  TextFormField(
-                    onChanged: (String value) {
-                      title = value;
-                    },
-                    maxLines: 1,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Enter Finance title';
-                      }
-                      return null;
-                    },
-                    enableSuggestions: true,
-                    decoration: InputDecoration(
-                      border: border(),
-                      errorBorder:
-                          border(Theme.of(context).colorScheme.onError),
-                      label: const Text('Track title'),
+              Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    TextFormField(
+                      onChanged: (String value) {
+                        title = value;
+                      },
+                      maxLines: 1,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Enter Transcition Title';
+                        }
+                        return null;
+                      },
+                      enableSuggestions: true,
+                      decoration: InputDecoration(
+                        border: border(),
+                        errorBorder:
+                            border(Theme.of(context).colorScheme.onError),
+                        label: const Text('Track title'),
+                      ),
+                      focusNode: focusNodes[0],
+                      onTapOutside: (e) {
+                        focusNodes[0].unfocus();
+                      },
                     ),
-                    focusNode: focusNodes[0],
-                    onTapOutside: (e) {
-                      focusNodes[0].unfocus();
-                    },
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 24, horizontal: 0),
-                      child: TextFormField(
-                        onChanged: (value) {
-                          formValue = int.parse(value);
-                        },
-                        maxLines: 1,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Value';
-                          }
-                          return null;
-                        },
-                        enableSuggestions: true,
-                        decoration: InputDecoration(
-                          border: border(),
-                          errorBorder:
-                              border(Theme.of(context).colorScheme.onError),
-                          label: const Text('Value'),
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
-                        keyboardType: TextInputType.number,
-                        focusNode: focusNodes[1],
-                        onTapOutside: (e) {
-                          if (e.down) {
-                            focusNodes[1].unfocus();
-                          }
-                        },
-                      )),
-                  TextFormField(
-                    onChanged: (value) {
-                      setState(() {
-                        des = value;
-                      });
-                    },
-                    maxLines: 4,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Enter Finance Title';
-                      }
-                      return null;
-                    },
-                    enableSuggestions: true,
-                    decoration: InputDecoration(
-                      border: border(),
-                      errorBorder:
-                          border(Theme.of(context).colorScheme.onError),
-                      label: const Text('Description'),
+                    Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 24, horizontal: 0),
+                        child: TextFormField(
+                          onChanged: (value) {
+                            formValue = int.parse(value);
+                          },
+                          maxLines: 1,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Enter Transcition Value';
+                            }
+                            return null;
+                          },
+                          enableSuggestions: true,
+                          decoration: InputDecoration(
+                            border: border(),
+                            errorBorder:
+                                border(Theme.of(context).colorScheme.onError),
+                            label: const Text('Value'),
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          keyboardType: TextInputType.number,
+                          focusNode: focusNodes[1],
+                          onTapOutside: (e) {
+                            if (e.down) {
+                              focusNodes[1].unfocus();
+                            }
+                          },
+                        )),
+                    TextFormField(
+                      onChanged: (value) {
+                        setState(() {
+                          des = value;
+                        });
+                      },
+                      maxLines: 4,
+                      enableSuggestions: true,
+                      decoration: InputDecoration(
+                        border: border(),
+                        errorBorder:
+                            border(Theme.of(context).colorScheme.onError),
+                        label: const Text('Description'),
+                      ),
+                      focusNode: focusNodes[2],
+                      onTapOutside: (event) {
+                        focusNodes[2].unfocus();
+                      },
                     ),
-                    focusNode: focusNodes[2],
-                    onTapOutside: (event) {
-                      focusNodes[2].unfocus();
-                    },
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 0),
-                      child: Column(
-                        children: [
-                          for (int i = 0; i < 2; i++)
-                            ListTile(
-                                title: Text(radios[i]),
-                                leading: Radio(
-                                  value: i,
-                                  groupValue: radioValue,
-                                  onChanged: (int? value) {
-                                    setState(() {
-                                      if (value != null) {
-                                        radioValue = value;
-                                      }
-                                    });
-                                  },
-                                ))
-                        ],
-                      )),
-                  Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 0),
-                      child: Column(
-                        children: [
-                          for (int i = 0; i < 3; i++)
-                            ListTile(
-                                title: Text(catRadios[i]),
-                                leading: Radio(
-                                  value: i,
-                                  groupValue: catRadioValue,
-                                  onChanged: (int? value) {
-                                    setState(() {
-                                      if (value != null) {
-                                        catRadioValue = value;
-                                      }
-                                    });
-                                  },
-                                ))
-                        ],
-                      )),
-                  IconButton(
-                    onPressed: () {
-                      TrackState newTrack = TrackState(
-                          title: title,
-                          value: formValue,
-                          description: des,
-                          type: intToType(radioValue),
-                          category: intToCategory(catRadioValue));
-                      context
-                          .read<TrackCollectionBloc>()
-                          .add(TrackCollectionAddTrackEvent(newTrack));
-                      Navigator.of(context).pop();
-                    },
-                    constraints: const BoxConstraints(maxWidth: 383),
-                    style: ButtonStyle(
-                        enableFeedback: true,
-                        shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
-                        fixedSize: WidgetStatePropertyAll<Size>(
-                            Size(screen.width, 56)),
-                        elevation: const WidgetStatePropertyAll<double>(6),
-                        backgroundColor: WidgetStatePropertyAll(
-                            Theme.of(context).colorScheme.onPrimaryContainer)),
-                    icon: Text('Add',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primaryContainer)),
-                  )
-                ],
+                    Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 0),
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < 2; i++)
+                              ListTile(
+                                  title: Text(radios[i]),
+                                  leading: Radio(
+                                    value: i,
+                                    groupValue: radioValue,
+                                    onChanged: (int? value) {
+                                      setState(() {
+                                        if (value != null) {
+                                          radioValue = value;
+                                        }
+                                      });
+                                    },
+                                  ))
+                          ],
+                        )),
+                    Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 0),
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < 3; i++)
+                              ListTile(
+                                  title: Text(catRadios[i]),
+                                  leading: Radio(
+                                    value: i,
+                                    groupValue: catRadioValue,
+                                    onChanged: (int? value) {
+                                      setState(() {
+                                        if (value != null) {
+                                          catRadioValue = value;
+                                        }
+                                      });
+                                    },
+                                  ))
+                          ],
+                        )),
+                    IconButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          TrackState newTrack = TrackState(
+                              title: title,
+                              value: formValue,
+                              description: des,
+                              type: intToType(radioValue),
+                              category: intToCategory(catRadioValue));
+                          context
+                              .read<TrackCollectionBloc>()
+                              .add(TrackCollectionAddTrackEvent(newTrack));
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      constraints: const BoxConstraints(maxWidth: 383),
+                      style: ButtonStyle(
+                          enableFeedback: true,
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12))),
+                          fixedSize: WidgetStatePropertyAll<Size>(
+                              Size(screen.width, 56)),
+                          elevation: const WidgetStatePropertyAll<double>(6),
+                          backgroundColor: WidgetStatePropertyAll(
+                              Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer)),
+                      icon: Text('Add',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer)),
+                    )
+                  ],
+                ),
               )
             ]),
           ),

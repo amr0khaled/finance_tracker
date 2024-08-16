@@ -11,10 +11,13 @@ class TrackCollectionState extends Equatable {
   final TrackCreationStatus status;
   final TrackCollection data;
   TrackCollectionState(this.name,
-      {this.status = TrackCreationStatus.initial, required this.data}) {
-    // TODO: change Id to UUID V4
-    _id = name + name;
+      {this.status = TrackCreationStatus.initial,
+      required this.data,
+      TrackCollectionId? id}) {
+    _id = id ?? const Uuid().v4();
   }
+  late TrackState lastRemovedTrack;
+  late int lastRemovedTrackIndex;
   TrackCollectionState copyWith(
           {String? name, TrackCreationStatus? status, TrackCollection? data}) =>
       TrackCollectionState(name ?? this.name,
@@ -37,8 +40,8 @@ class TrackCollectionState extends Equatable {
       }
       return result;
     } catch (e, stack) {
-      ErrorHint(
-          'filterCategory($categories): ${e.toString()} ${stack.toString()}');
+      print(ErrorHint(
+          'filterCategory($categories): ${e.toString()} ${stack.toString()}'));
       return data;
     }
   }
@@ -78,7 +81,7 @@ class TrackCollectionState extends Equatable {
               .contains(search.toLowerCase())));
       return result;
     } catch (e, stack) {
-      ErrorHint('filter($search): ${e.toString()} ${stack.toString()}');
+      print(ErrorHint('filter($search): ${e.toString()} ${stack.toString()}'));
       return data;
     }
   }
@@ -88,7 +91,7 @@ class TrackCollectionState extends Equatable {
     try {
       data.add(track);
     } catch (e, stack) {
-      ErrorHint('addTrack($track): ${e.toString()} ${stack.toString()}');
+      print(ErrorHint('addTrack($track): ${e.toString()} ${stack.toString()}'));
     }
   }
 
@@ -97,16 +100,28 @@ class TrackCollectionState extends Equatable {
     try {
       data.addAll(tracks);
     } catch (e, stack) {
-      ErrorHint('addTrackAll($tracks): ${e.toString()} ${stack.toString()}');
+      print(ErrorHint(
+          'addTrackAll($tracks): ${e.toString()} ${stack.toString()}'));
     }
   }
 
   // Remove Track
   Future<void> remove(TrackId id) async {
     try {
+      lastRemovedTrackIndex = data.indexWhere((e) => e.id == id);
+      lastRemovedTrack = data[lastRemovedTrackIndex];
       data.removeWhere((e) => e.id == id);
     } catch (e, stack) {
-      ErrorHint('remove($id): ${e.toString()} ${stack.toString()}');
+      print(ErrorHint('remove($id): ${e.toString()} ${stack.toString()}'));
+    }
+  }
+
+  // Undo Remove Track
+  Future<void> undo() async {
+    try {
+      data.insert(lastRemovedTrackIndex, lastRemovedTrack);
+    } catch (e, stack) {
+      print(ErrorHint('undo(): ${e.toString()} ${stack.toString()}'));
     }
   }
 
@@ -115,7 +130,7 @@ class TrackCollectionState extends Equatable {
     try {
       data.clear();
     } catch (e, stack) {
-      ErrorHint('clear(): ${e.toString()} ${stack.toString()}');
+      print(ErrorHint('clear(): ${e.toString()} ${stack.toString()}'));
     }
   }
 
