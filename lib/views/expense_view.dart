@@ -25,7 +25,7 @@ class _ExpenseViewState extends State<ExpenseView> {
       }
       return ListView(
           children: List.generate(data.length, (i) {
-        final TrackCard card = TrackCard(data[i]);
+        final TrackCard card = TrackCard(data[i], i);
         if (i == 0) {
           return Padding(padding: const EdgeInsets.only(top: 12), child: card);
         }

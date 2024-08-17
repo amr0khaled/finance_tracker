@@ -31,7 +31,6 @@ class TrackStorage {
 
   void _init() {
     final global = _get(kTracksCollection);
-    print('global: $global');
     if (global != null) {
       final globalTracks = json.decode(global) as Map<String, dynamic>;
       final List<TrackState> data = [];
@@ -84,6 +83,7 @@ String _trackStateToString(TrackState state) {
   final category = state.category.name;
   final type = state.type.name;
   final ob = {
+    'id': state.id,
     'title': state.title,
     'value': state.value,
     'description': state.description,
@@ -125,6 +125,7 @@ TrackState _stringToTrackState(String value) {
       }
   }
   final TrackState state = TrackState(
+      id: stateString['id'],
       title: stateString['title'] as String,
       value: stateString['value'] as int,
       description: stateString['description'] as String,

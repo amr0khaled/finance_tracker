@@ -74,7 +74,9 @@ class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));
       try {
         final data = _repo.getTrackCollection();
-        await _state.addAllTracks(data.data);
+        if (_state.data.isEmpty) {
+          _state.data.addAll(data.data);
+        }
         emit(_state.copyWith(
             status: TrackCreationStatus.done, data: _state.getTracks()));
       } catch (e) {
@@ -85,7 +87,7 @@ class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
     on<TrackCollectionAddTrackEvent>((event, emit) async {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));
       try {
-        await _state.addTrack(event.track);
+        _state.data.add(event.track);
         await _repo.setTrackCollection(_state);
         emit(_state.copyWith(
             status: TrackCreationStatus.done, data: _state.getTracks()));
@@ -96,10 +98,16 @@ class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
     on<TrackCollectionAddAllTrackEvent>((event, emit) async {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));
       try {
-        await _state.addAllTracks(event.tracks);
-        await _repo.setTrackCollection(_state);
-        emit(_state.copyWith(
-            status: TrackCreationStatus.done, data: _state.getTracks()));
+        var orgLen = _state.data.length;
+        _state.data.addAll(event.tracks);
+        var modLen = _state.data.length;
+        if (orgLen != modLen) {
+          await _repo.setTrackCollection(_state);
+          emit(_state.copyWith(
+              status: TrackCreationStatus.done, data: _state.getTracks()));
+        } else {
+          throw Error();
+        }
       } catch (e) {
         emit(_state.copyWith(status: TrackCreationStatus.failure));
       }

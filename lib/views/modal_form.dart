@@ -215,9 +215,9 @@ class _ModalForm extends State<ModalForm> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           TrackState newTrack = TrackState(
-                              title: title,
+                              title: title.trim(),
                               value: formValue,
-                              description: des,
+                              description: des.trim(),
                               type: intToType(radioValue),
                               category: intToCategory(catRadioValue));
                           context

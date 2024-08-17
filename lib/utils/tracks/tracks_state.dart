@@ -95,20 +95,11 @@ class TrackCollectionState extends Equatable {
     }
   }
 
-  // Add All Tracks
-  Future<void> addAllTracks(List<TrackState> tracks) async {
-    try {
-      data.addAll(tracks);
-    } catch (e, stack) {
-      print(ErrorHint(
-          'addTrackAll($tracks): ${e.toString()} ${stack.toString()}'));
-    }
-  }
-
   // Remove Track
   Future<void> remove(TrackId id) async {
     try {
       lastRemovedTrackIndex = data.indexWhere((e) => e.id == id);
+      print('last :$lastRemovedTrackIndex');
       lastRemovedTrack = data[lastRemovedTrackIndex];
       data.removeWhere((e) => e.id == id);
     } catch (e, stack) {

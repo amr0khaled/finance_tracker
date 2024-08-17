@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:finance_tracker/components/card.dart';
 import 'package:finance_tracker/components/filter_tracks.dart';
 import 'package:finance_tracker/components/searchbar.dart';
@@ -51,6 +53,7 @@ Future<void> main() async {
                   previous.data.length != current.data.length ||
                   previous.name != current.name,
               listener: (context, state) {
+                print('After listening ${state.status}');
                 if (state.status == TrackCreationStatus.failure) {
                   ScaffoldMessenger.of(context).showSnackBar(snackBar(context,
                       title: 'Error in listener', onPressed: () {}));
@@ -72,6 +75,11 @@ class MyApp extends StatelessWidget {
     context
         .read<TrackCollectionBloc>()
         .add(const TrackCollectionGetDataEvent());
+    Timer.periodic(const Duration(minutes: 10), (_) {
+      context
+          .read<TrackCollectionBloc>()
+          .add(const TrackCollectionPushDataEvent());
+    });
     return MaterialApp(
       title: 'Finance Tracker',
       theme: theme,
@@ -231,7 +239,7 @@ class _AppContainerState extends State<AppContainer> {
                           children: items(context),
                         ))))),
         floatingActionButton: FloatingActionButton(
-          backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
           onPressed: () {
             Navigator.push(
                 context,
@@ -247,44 +255,10 @@ class _AppContainerState extends State<AppContainer> {
           elevation: 5,
           enableFeedback: true,
           tooltip: 'Add Expense',
-          child: Icon(Icons.add,
-              color: Theme.of(context).colorScheme.onTertiaryContainer),
+          child:
+              Icon(Icons.add, color: Theme.of(context).colorScheme.onTertiary),
         ),
       ),
     );
   }
 }
-
-
-
-
-/*
-*
-*
-*
-*
-*MultiBlocListener(
-        listeners: [
-          BlocListener<TrackCollectionBloc, TrackCollectionState>(
-              listenWhen: (p, n) => p.status != n.status,
-              listener: (context, state) {
-                if (state.status == TrackCreationStatus.failure) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(const SnackBar(content: Text('Erorr')));
-                }
-              }),
-          BlocListener<TrackCollectionBloc, TrackCollectionState>(
-              listenWhen: (p, n) => p.data != n.data,
-              listener: (context, state) {
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(const SnackBar(content: Text('Done')));
-              }),
-        ],
-        child: const AppContainer(title: 'Finance Tracker'),
-      )
-*
-*
-*
-*/
