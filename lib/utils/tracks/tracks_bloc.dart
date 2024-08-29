@@ -44,9 +44,7 @@ class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
   TrackCollectionBloc(TrackStorage repo, {TrackCollectionState? state})
       : _repo = repo,
         _state = repo.getTrackCollection(),
-        super(repo.state ??
-            TrackCollectionState(state?.name ?? 'note',
-                data: state?.data ?? [])) {
+        super(repo.getTrackCollection()) {
     // Undo Remove Data
     on<TrackCollectionUndoTrackEvent>((event, emit) async {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));

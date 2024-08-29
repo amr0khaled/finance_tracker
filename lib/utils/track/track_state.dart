@@ -3,7 +3,38 @@ part of '../tracks/tracks_bloc.dart';
 typedef TrackId = String;
 typedef TrackValue = int;
 
-enum TrackCategory { personal, work, home }
+// enum TrackCategory { personal, work, home }
+class TrackCategories {
+  final List<TrackCategory> _values = [];
+  final List<String> _names = [];
+  TrackCategories();
+
+  TrackCategory addCategory(String name) {
+    var cat = TrackCategory(name);
+    if (!_names.contains(name)) {
+      _values.add(cat);
+      _names.add(name);
+      return cat;
+    }
+    return _values.lastWhere((e) => e.name == name);
+  }
+
+  TrackCategory getCategory(String name) {
+    if (_values.where((e) => e.name == name).isEmpty) {
+      return addCategory(name);
+    }
+    return _values.lastWhere((e) => e.name == name);
+  }
+
+  List<String> get names => _names;
+  List<TrackCategory> get values => _values;
+}
+
+class TrackCategory {
+  final String type;
+  const TrackCategory(this.type);
+  String get name => type;
+}
 
 enum TrackType { income, expense }
 
@@ -21,7 +52,7 @@ class TrackState extends Equatable {
       {this.title = '',
       this.type = TrackType.income,
       this.value = 0,
-      this.category = TrackCategory.personal,
+      this.category = const TrackCategory('personal'),
       this.description = '',
       this.status = TrackCreationStatus.initial,
       TrackId? id}) {
@@ -56,22 +87,22 @@ class TrackState extends Equatable {
     }
   }
 
-  int categoryNumber() {
-    switch (category) {
-      case TrackCategory.personal:
-        {
-          return 1;
-        }
-      case TrackCategory.work:
-        {
-          return 2;
-        }
-      case TrackCategory.home:
-        {
-          return 3;
-        }
-    }
-  }
+  //int categoryNumber() {
+  //  switch (category) {
+  //    case TrackCategory.personal:
+  //      {
+  //        return 1;
+  //      }
+  //    case TrackCategory.work:
+  //      {
+  //        return 2;
+  //      }
+  //    case TrackCategory.home:
+  //      {
+  //        return 3;
+  //      }
+  //  }
+  //}
 
   bool isExpense() {
     switch (type) {

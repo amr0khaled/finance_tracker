@@ -92,3 +92,5 @@ class TrackAllAddCollectionEvent extends TrackEvent {}
 class TrackAllRemoveCollectionEvent extends TrackEvent {}
 
 class TrackAllClearCollectionEvent extends TrackEvent {}
+
+class TrackAllGetCategories extends TrackEvent {}

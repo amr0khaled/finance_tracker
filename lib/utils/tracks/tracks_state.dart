@@ -10,18 +10,38 @@ class TrackCollectionState extends Equatable {
   final String name;
   final TrackCreationStatus status;
   final TrackCollection data;
+  static TrackCategories _categories = TrackCategories();
   TrackCollectionState(this.name,
       {this.status = TrackCreationStatus.initial,
       required this.data,
-      TrackCollectionId? id}) {
+      TrackCollectionId? id,
+      TrackCategories? categories}) {
+    _categories = categories ?? TrackCategories();
     _id = id ?? const Uuid().v4();
   }
   late TrackState lastRemovedTrack;
   late int lastRemovedTrackIndex;
   TrackCollectionState copyWith(
-          {String? name, TrackCreationStatus? status, TrackCollection? data}) =>
-      TrackCollectionState(name ?? this.name,
-          status: status ?? this.status, data: data ?? this.data);
+      {String? name,
+      TrackCreationStatus? status,
+      TrackCollection? data,
+      TrackCategories? categories}) {
+    return TrackCollectionState(name ?? this.name,
+        status: status ?? this.status,
+        data: data ?? this.data,
+        categories: categories ?? _categories);
+  }
+
+  TrackCategories getCategories() {
+    var arr = _categories ?? TrackCategories();
+    for (TrackState i in data) {
+      if (!arr.names.contains(i.category.name)) {
+        arr.addCategory(i.category.name);
+      }
+    }
+    _categories = arr;
+    return arr;
+  }
 
   // get Collection Id
   TrackCollectionId get collectionId => _id;
@@ -29,13 +49,20 @@ class TrackCollectionState extends Equatable {
   // get All Tracks in collection
   TrackCollection getTracks() => data;
 
+  TrackCategories get categories => _categories;
+
+  Future<void> setCategories(TrackCategories categories) async {
+    _categories = categories;
+  }
+
   // Filter Tracks and return it
   Future<TrackCollection> filterCategory(List<TrackCategory> categories) async {
     try {
       TrackCollection result = [];
-      for (TrackState track in data) {
-        if (categories.contains(track.category)) {
-          result.add(track);
+      List<String> names = categories.map((e) => e.name).toList();
+      for (int i = 0; i < data.length; i++) {
+        if (names.contains(data[i].category.name)) {
+          result.add(data[i]);
         }
       }
       return result;
@@ -51,9 +78,6 @@ class TrackCollectionState extends Equatable {
       TrackCollection result = [];
       bool hasIncomeKeyword = search.toLowerCase().contains('income');
       bool hasExpenseKeyword = search.toLowerCase().contains('expense');
-      bool hasPersonalKeyword = search.toLowerCase().contains('personal');
-      bool hasHomeKeyword = search.toLowerCase().contains('home');
-      bool hasWorkKeyword = search.toLowerCase().contains('work');
       if (search.isEmpty) {
         return data;
       }
@@ -62,15 +86,6 @@ class TrackCollectionState extends Equatable {
       }
       if (hasExpenseKeyword) {
         result.addAll(data.where((e) => e.type == TrackType.expense));
-      }
-      if (hasPersonalKeyword) {
-        result.addAll(data.where((e) => e.category == TrackCategory.personal));
-      }
-      if (hasHomeKeyword) {
-        result.addAll(data.where((e) => e.category == TrackCategory.home));
-      }
-      if (hasWorkKeyword) {
-        result.addAll(data.where((e) => e.category == TrackCategory.work));
       }
       result.addAll(data.where((e) =>
           e.title.toLowerCase().split(' ').contains(search.toLowerCase()) ||

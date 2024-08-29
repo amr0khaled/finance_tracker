@@ -2,6 +2,7 @@ import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 TrackType intToType(int value) {
   switch (value) {
@@ -16,21 +17,8 @@ TrackType intToType(int value) {
   }
 }
 
-TrackCategory intToCategory(int value) {
-  switch (value) {
-    case 1:
-      {
-        return TrackCategory.home;
-      }
-    case 2:
-      {
-        return TrackCategory.work;
-      }
-    default:
-      {
-        return TrackCategory.personal;
-      }
-  }
+TrackCategory intToCategory(int value, TrackCategories cats) {
+  return cats.values[value];
 }
 
 class ModalForm extends StatefulWidget {
@@ -55,11 +43,7 @@ class _ModalForm extends State<ModalForm> {
   String des = '';
   bool isIncome = true;
   List<String> radios = ['Income', 'Expense'];
-  List<String> catRadios = [
-    'Personal',
-    'Work',
-    'Home',
-  ];
+  late List<String> catRadios = [];
   int radioValue = 0;
   int catRadioValue = 0;
   List<FocusNode> focusNodes = [
@@ -68,17 +52,84 @@ class _ModalForm extends State<ModalForm> {
     FocusNode(),
   ];
   final _formKey = GlobalKey<FormState>();
+  late TrackCategories _cats = TrackCategories();
+  FocusNode newCatFocus = FocusNode();
 
   @override
   Widget build(BuildContext context) {
+    var bloc = BlocProvider.of<TrackCollectionBloc>(context);
+    setState(() {
+      if (_cats.names.isEmpty) {
+        _cats = bloc.state.getCategories();
+      }
+      catRadios = List.generate(_cats.names.length, (i) {
+        var arr = _cats.names[i].split('');
+        arr[0] = arr[0].toUpperCase();
+        return arr.join();
+      }).reversed.toList();
+    });
     Size screen = MediaQuery.of(context).size;
+    var state = bloc.state;
     return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(AppBar.preferredHeightFor(
+            context, const Size(double.infinity, 70))),
+        child: Material(
+          color: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+            child: AppBar(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              title: const Text('Add'),
+              backgroundColor: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withOpacity(0.4),
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        child: IconButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              TrackState newTrack = TrackState(
+                  title: title.trim(),
+                  value: formValue,
+                  description: des.trim(),
+                  type: intToType(radioValue),
+                  category: intToCategory(catRadioValue, state.categories));
+              context
+                  .read<TrackCollectionBloc>()
+                  .add(TrackCollectionAddTrackEvent(newTrack));
+              Navigator.of(context).pop();
+            }
+          },
+          constraints: const BoxConstraints(maxWidth: 383),
+          style: ButtonStyle(
+              enableFeedback: true,
+              shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12))),
+              fixedSize: WidgetStatePropertyAll<Size>(Size(screen.width, 56)),
+              elevation: const WidgetStatePropertyAll<double>(6),
+              backgroundColor: WidgetStatePropertyAll(
+                  Theme.of(context).colorScheme.onPrimaryContainer)),
+          icon: Text('Add',
+              style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: Theme.of(context).colorScheme.primaryContainer)),
+        ),
+      ),
       body: SafeArea(
         maintainBottomViewPadding: true,
         child: SingleChildScrollView(
-          padding: MediaQuery.viewInsetsOf(context),
+          padding: MediaQuery.viewInsetsOf(context) +
+              const EdgeInsets.only(bottom: 16),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Padding(
@@ -208,44 +259,39 @@ class _ModalForm extends State<ModalForm> {
                                         }
                                       });
                                     },
-                                  ))
+                                  )),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0, vertical: 8),
+                              child: ListTileTheme(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                  tileColor: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.1),
+                                  child: ExpansionTile(
+                                    leading: Icon(MdiIcons.plus),
+                                    onExpansionChanged: (e) {
+                                      if (e) {
+                                        newCatFocus.attach(context);
+                                      }
+                                    },
+                                    //onTap: () {},
+                                    title: const Text('Add Category'),
+                                    children: [
+                                      TextFormField(
+                                        focusNode: newCatFocus,
+                                        decoration: InputDecoration(
+                                            hintText:
+                                                'e.g. Expremental Category'),
+                                      )
+                                    ],
+                                    // splashColor: Colors.deepOrange,
+                                  )),
+                            )
                           ],
                         )),
-                    IconButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          TrackState newTrack = TrackState(
-                              title: title.trim(),
-                              value: formValue,
-                              description: des.trim(),
-                              type: intToType(radioValue),
-                              category: intToCategory(catRadioValue));
-                          context
-                              .read<TrackCollectionBloc>()
-                              .add(TrackCollectionAddTrackEvent(newTrack));
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      constraints: const BoxConstraints(maxWidth: 383),
-                      style: ButtonStyle(
-                          enableFeedback: true,
-                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12))),
-                          fixedSize: WidgetStatePropertyAll<Size>(
-                              Size(screen.width, 56)),
-                          elevation: const WidgetStatePropertyAll<double>(6),
-                          backgroundColor: WidgetStatePropertyAll(
-                              Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer)),
-                      icon: Text('Add',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 18,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer)),
-                    )
                   ],
                 ),
               )

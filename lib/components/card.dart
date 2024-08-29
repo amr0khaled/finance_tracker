@@ -172,7 +172,7 @@ class _TrackCardState extends State<TrackCard> with TickerProviderStateMixin {
                               iconSize: 24),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(widget.data.id,
+                        child: Text(widget.data.title,
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w500,

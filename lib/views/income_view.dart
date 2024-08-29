@@ -55,17 +55,19 @@ class _IncomeViewState extends State<IncomeView> with TickerProviderStateMixin {
           if (state.status != TrackCreationStatus.initial) {
             data = state.data.where((e) => e.type == TrackType.income).toList();
           }
-          return AnimatedList(
-              key: incomeListKey,
-              initialItemCount: data.length,
-              itemBuilder: (c, i, a) {
-                final TrackCard card = TrackCard(data[i], i);
-                if (i == 0) {
-                  return Padding(
-                      padding: const EdgeInsets.only(top: 12), child: card);
-                }
-                return buildItem(c, a, Offset.zero, listController, card);
-              });
+          return data.isEmpty
+              ? Container()
+              : AnimatedList(
+                  key: incomeListKey,
+                  initialItemCount: data.length,
+                  itemBuilder: (c, i, a) {
+                    final TrackCard card = TrackCard(data[i], i);
+                    if (i == 0) {
+                      return Padding(
+                          padding: const EdgeInsets.only(top: 12), child: card);
+                    }
+                    return buildItem(c, a, Offset.zero, listController, card);
+                  });
           // return ListView(
           //     children: List.generate(data.length, (i) {
           //   final TrackCard card = TrackCard(data[i]);

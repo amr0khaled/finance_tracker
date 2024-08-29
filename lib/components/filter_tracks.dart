@@ -12,7 +12,9 @@ class FilterTracks extends StatefulWidget {
 }
 
 class _FilterTracksState extends State<FilterTracks> {
-  List<bool> isSelected = List.generate(4, (i) => i == 0 ? true : false);
+  List<String> categoriesNames = [];
+  late List<bool> isSelected =
+      List.generate(categoriesNames.length, (i) => i == 0 ? true : false);
   int manySelected = 3;
   void doFilter(BuildContext context, List<TrackCategory> categories) {
     final bloc = context.read<TrackCollectionBloc>();
@@ -22,108 +24,116 @@ class _FilterTracksState extends State<FilterTracks> {
   @override
   void initState() {
     super.initState();
-    filter.addAll(TrackCategory.values);
   }
 
   @override
   Widget build(BuildContext context) {
-    final filterNames = ['All', 'Personal', 'Work', 'Home'];
-    return BlocBuilder<TrackCollectionBloc, TrackCollectionState>(
-        builder: (context, state) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 24),
-        child: SizedBox(
-          height: 32,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(4, (i) {
-              return IconButton(
-                icon: AnimatedDefaultTextStyle(
-                  duration: Durations.medium2,
-                  curve: Curves.linearToEaseOut,
-                  style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected[i]
-                          ? Theme.of(context).colorScheme.onTertiary
-                          : Theme.of(context).colorScheme.onSecondary),
-                  child: Text(
-                    filterNames[i],
-                  ),
-                ),
-                isSelected: isSelected[i],
-                padding:
-                    const EdgeInsets.symmetric(vertical: 2, horizontal: 16),
-                style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return Theme.of(context).colorScheme.tertiary;
-                  }
-                  return Theme.of(context).colorScheme.secondary;
-                })),
-                onPressed: () {
-                  setState(() {
-                    isSelected[i] = !isSelected[i];
-                    if (!isSelected[i]) {
-                      manySelected++;
-                    } else {
-                      manySelected--;
-                    }
-                    if (i == 0) {
-                      List<bool> newList = List.filled(4, false);
-                      newList[0] = true;
-                      isSelected = newList;
-                      filter = TrackCategory.values;
-                    } else {
-                      if (isSelected.where((e) => e == false).length > 3) {
-                        isSelected[i] = true;
-                      }
-                      isSelected[0] = false;
-                    }
-                    if (isSelected[0] == true && i != 0) {
-                      isSelected[0] = false;
-                    }
-                    if (manySelected > 3) {
-                      isSelected[i] = true;
-                      manySelected = 3;
-                    }
-                    if (manySelected < 1) {
-                      isSelected[i] = true;
-                    }
-                    List<TrackCategory> result = [];
-                    if (isSelected.indexOf(true) != 0 &&
-                        isSelected.lastIndexOf(true) > 0) {
-                      for (var i = 0; i < isSelected.length; i++) {
-                        if (isSelected[i]) {
-                          switch (i) {
-                            case 1:
-                              {
-                                result.add(TrackCategory.personal);
-                              }
-                            case 2:
-                              {
-                                result.add(TrackCategory.work);
-                              }
-                            default:
-                              {
-                                result.add(TrackCategory.home);
-                              }
-                          }
+    var bloc = BlocProvider.of<TrackCollectionBloc>(context);
+    var state = bloc.state;
+
+    final categories = state.getCategories();
+    if (categoriesNames.isEmpty) {
+      setState(() {
+        categoriesNames.add('All');
+        categoriesNames.addAll(categories.names.map((e) {
+          var arr = e.split('').toList();
+          arr[0] = e[0].toUpperCase();
+          return arr.join();
+        }).toList());
+        filter = categories.values;
+      });
+    }
+    print(isSelected);
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: SizedBox(
+        height: 32,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: categories.names.isEmpty
+              ? []
+              : List.generate(categories.names.length + 1, (i) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 20),
+                    child: IconButton(
+                      icon: AnimatedDefaultTextStyle(
+                        duration: Durations.medium2,
+                        curve: Curves.linearToEaseOut,
+                        style: TextStyle(
+                            fontFamily: 'Roboto',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected[i]
+                                ? Theme.of(context).colorScheme.onTertiary
+                                : Theme.of(context).colorScheme.onSecondary),
+                        child: Text(
+                          categoriesNames[i],
+                        ),
+                      ),
+                      isSelected: isSelected[i],
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 2, horizontal: 16),
+                      style: ButtonStyle(backgroundColor:
+                          WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return Theme.of(context).colorScheme.tertiary;
                         }
-                      }
-                    } else {
-                      result = TrackCategory.values;
-                    }
-                    filter = result;
-                    doFilter(context, result);
-                  });
-                },
-              );
-            }),
-          ),
+                        return Theme.of(context).colorScheme.secondary;
+                      })),
+                      onPressed: () {
+                        setState(() {
+                          final values = categories.values;
+                          isSelected[i] = !isSelected[i];
+                          if (!isSelected[i]) {
+                            manySelected++;
+                          } else {
+                            manySelected--;
+                          }
+                          if (i == 0) {
+                            List<bool> newList =
+                                List.filled(isSelected.length, false);
+                            newList[0] = true;
+                            isSelected = newList;
+                            filter = values;
+                          } else {
+                            if (isSelected.where((e) => e == false).length >
+                                categoriesNames.length - 1) {
+                              isSelected[i] = true;
+                            }
+                            isSelected[0] = false;
+                          }
+                          if (isSelected[0] == true && i != 0) {
+                            isSelected[0] = false;
+                          }
+                          if (manySelected > categoriesNames.length - 1) {
+                            isSelected[i] = true;
+                            manySelected = categoriesNames.length - 1;
+                          }
+                          if (manySelected < 1) {
+                            isSelected[i] = true;
+                          }
+                          List<TrackCategory> result = [];
+                          if (isSelected.indexOf(true) != 0 &&
+                              isSelected.lastIndexOf(true) > 0) {
+                            for (var i = 0; i < isSelected.length; i++) {
+                              if (isSelected[i]) {
+                                print(true);
+                                result.add(values[i - 1]);
+                              }
+                            }
+                          } else {
+                            result = values;
+                          }
+                          print(result.map((e) => e.name));
+                          filter = result;
+                          doFilter(context, result);
+                        });
+                      },
+                    ),
+                  );
+                }),
         ),
-      );
-    });
+      ),
+    );
   }
 }

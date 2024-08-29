@@ -14,6 +14,7 @@ class TrackStorage {
       BehaviorSubject<TrackCollectionState>.seeded(
           state ?? TrackCollectionState('not', data: const []));
   static const kTracksCollection = '__tracks_collection__';
+  TrackCollectionState get value => _tracks_collections_controller.value;
 
   String? _get(String key) => _plugin.getString(key);
   void _set(String key, String value) => _plugin.setString(key, value);
@@ -31,16 +32,21 @@ class TrackStorage {
 
   void _init() {
     final global = _get(kTracksCollection);
+    late TrackCollectionState collectionState;
     if (global != null) {
       final globalTracks = json.decode(global) as Map<String, dynamic>;
+      collectionState =
+          TrackCollectionState(globalTracks['name'] as String, data: const []);
       final List<TrackState> data = [];
       for (String ob in globalTracks['data'] as List) {
-        TrackState state = _stringToTrackState(ob);
+        List<dynamic> results = _stringToTrackState(ob, collectionState);
+        TrackState state = results[0] as TrackState;
+        collectionState = results[1] as TrackCollectionState;
         data.add(state);
       }
       // WARNING: FOR TESTING I WILL USE TESTING DATA INSTEAD OF LOCALSTORAGE DATA
-      final tracks =
-          TrackCollectionState(globalTracks['name'] as String, data: data);
+      final tracks = collectionState.copyWith(
+          data: data, categories: collectionState.categories);
       _tracks_collections_controller.add(tracks);
     } else {
       _plugin.setString(
@@ -48,35 +54,6 @@ class TrackStorage {
       _init();
     }
   }
-
-  // @override
-  // Future<void> clear() {
-  //   _plugin.clear();
-  // }
-
-  // @override
-  // Future<void> close() {
-  //   // TODO: implement close
-  //   throw UnimplementedError();
-  // }
-
-  // @override
-  // Future<void> delete(String key) {
-  //   // TODO: implement delete
-  //   throw UnimplementedError();
-  // }
-
-  // @override
-  // read(String key) {
-  //   // TODO: implement read
-  //   throw UnimplementedError();
-  // }
-
-  // @override
-  // Future<void> write(String key, value) {
-  //   // TODO: implement write
-  //   throw UnimplementedError();
-  // }
 }
 
 String _trackStateToString(TrackState state) {
@@ -93,7 +70,7 @@ String _trackStateToString(TrackState state) {
   return json.encode(ob);
 }
 
-TrackState _stringToTrackState(String value) {
+List<dynamic> _stringToTrackState(String value, TrackCollectionState state) {
   final stateString = json.decode(value) as Map<String, dynamic>;
   late TrackType type;
   late TrackCategory category;
@@ -108,28 +85,15 @@ TrackState _stringToTrackState(String value) {
         type = TrackType.expense;
       }
   }
-  switch (stateString['category']) {
-    case 'personal':
-      {
-        category = TrackCategory.personal;
-        break;
-      }
-    case 'home':
-      {
-        category = TrackCategory.home;
-        break;
-      }
-    default:
-      {
-        category = TrackCategory.work;
-      }
-  }
-  final TrackState state = TrackState(
+  final TrackCategories cats = state.categories;
+  category = cats.addCategory(stateString['category']);
+  state.setCategories(cats);
+  final TrackState newState = TrackState(
       id: stateString['id'],
       title: stateString['title'] as String,
       value: stateString['value'] as int,
       description: stateString['description'] as String,
       type: type,
       category: category);
-  return state;
+  return [newState, state];
 }
