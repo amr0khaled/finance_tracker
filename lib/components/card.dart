@@ -7,19 +7,19 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 SnackBar snackBar(BuildContext context,
     {String? title, Function()? onPressed, Offset? offset}) {
-  Color text = Theme.of(context).colorScheme.onSurface;
+  Color text = Theme.of(context).colorScheme.surface;
   return SnackBar(
     content: Text(
       title ?? 'TEST',
       style: TextStyle(color: text, fontSize: 18),
     ),
-    duration: const Duration(seconds: 3),
+    duration: const Duration(seconds: 5),
     showCloseIcon: true,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     margin: const EdgeInsets.fromLTRB(40, 0, 40, 10),
     behavior: SnackBarBehavior.floating,
     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-    backgroundColor: Colors.grey.shade600,
+    backgroundColor: Theme.of(context).colorScheme.onSurface,
     closeIconColor: text,
     dismissDirection: DismissDirection.horizontal,
     elevation: 6,

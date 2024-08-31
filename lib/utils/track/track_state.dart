@@ -19,6 +19,21 @@ class TrackCategories {
     return _values.lastWhere((e) => e.name == name);
   }
 
+  late TrackCategory _lastRemoved;
+  int _lastRemovedIndex = 0;
+  void removeCategory(String name) {
+    _lastRemovedIndex = _values.lastIndexWhere((e) => e.name == name);
+    _lastRemoved = _values.removeAt(_lastRemovedIndex);
+    _names.removeWhere((e) => e == name);
+  }
+
+  void undo() {
+    if (_lastRemoved.name.isNotEmpty) {
+      _values.insert(_lastRemovedIndex, _lastRemoved);
+      _names.insert(_lastRemovedIndex, _lastRemoved.name);
+    }
+  }
+
   TrackCategory getCategory(String name) {
     if (_values.where((e) => e.name == name).isEmpty) {
       return addCategory(name);

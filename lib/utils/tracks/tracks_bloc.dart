@@ -159,9 +159,49 @@ class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
     on<TrackCollectionEditEvent>((event, emit) async {
       emit(_state.copyWith(status: TrackCreationStatus.inProgress));
       try {
+        await _repo.setTrackCollection(_state);
         emit(_state.copyWith(
             status: TrackCreationStatus.done, name: event.name));
-        await _repo.setTrackCollection(_state);
+      } catch (e) {
+        emit(_state.copyWith(status: TrackCreationStatus.failure));
+      }
+    });
+    on<TrackAllNewCategory>((event, emit) {
+      emit(_state.copyWith(status: TrackCreationStatus.inProgress));
+      try {
+        _state.categories.addCategory(event.category);
+        if (!_state.categories.names.contains(event.category)) {
+          print("error new category not imported");
+          emit(_state.copyWith(status: TrackCreationStatus.failure));
+        } else {
+          emit(_state.copyWith(
+              status: TrackCreationStatus.done, categories: _state.categories));
+        }
+      } catch (e) {
+        emit(_state.copyWith(status: TrackCreationStatus.failure));
+      }
+    });
+    on<TrackAllRemoveCategory>((event, emit) {
+      emit(_state.copyWith(status: TrackCreationStatus.inProgress));
+      try {
+        _state.categories.removeCategory(event.category);
+        if (_state.categories.names.contains(event.category)) {
+          print("error remove category");
+          emit(_state.copyWith(status: TrackCreationStatus.failure));
+        } else {
+          emit(_state.copyWith(
+              status: TrackCreationStatus.done, categories: _state.categories));
+        }
+      } catch (e) {
+        emit(_state.copyWith(status: TrackCreationStatus.failure));
+      }
+    });
+    on<TrackAllUndoCategory>((event, emit) {
+      emit(_state.copyWith(status: TrackCreationStatus.inProgress));
+      try {
+        _state.categories.undo();
+        emit(_state.copyWith(
+            status: TrackCreationStatus.done, categories: _state.categories));
       } catch (e) {
         emit(_state.copyWith(status: TrackCreationStatus.failure));
       }

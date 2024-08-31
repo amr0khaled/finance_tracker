@@ -39,6 +39,13 @@ class TrackCollectionState extends Equatable {
         arr.addCategory(i.category.name);
       }
     }
+    if (arr.names.length < _categories.names.length) {
+      var unaddedNames =
+          _categories.names.where((e) => !arr.names.contains(e)).toList();
+      for (var i in unaddedNames) {
+        arr.addCategory(i);
+      }
+    }
     _categories = arr;
     return arr;
   }

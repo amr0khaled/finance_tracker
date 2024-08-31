@@ -94,3 +94,21 @@ class TrackAllRemoveCollectionEvent extends TrackEvent {}
 class TrackAllClearCollectionEvent extends TrackEvent {}
 
 class TrackAllGetCategories extends TrackEvent {}
+
+class TrackAllNewCategory extends TrackEvent {
+  final String category;
+  const TrackAllNewCategory(this.category);
+
+  @override
+  List<Object?> get props => [category];
+}
+
+class TrackAllRemoveCategory extends TrackEvent {
+  final String category;
+  const TrackAllRemoveCategory(this.category);
+
+  @override
+  List<Object?> get props => [category];
+}
+
+class TrackAllUndoCategory extends TrackEvent {}

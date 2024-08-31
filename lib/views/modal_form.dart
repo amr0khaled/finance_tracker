@@ -1,3 +1,4 @@
+import 'package:finance_tracker/components/card.dart';
 import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -54,6 +55,15 @@ class _ModalForm extends State<ModalForm> {
   final _formKey = GlobalKey<FormState>();
   late TrackCategories _cats = TrackCategories();
   FocusNode newCatFocus = FocusNode();
+  String newCategory = "";
+
+  void addNewCategory(TrackCollectionBloc bloc) {
+    bloc.add(TrackAllNewCategory(newCategory));
+    setState(() {
+      _cats = bloc.state.getCategories();
+      newCategory = "";
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,6 +157,10 @@ class _ModalForm extends State<ModalForm> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     TextFormField(
+                      onFieldSubmitted: (e) {
+                        FocusScope.of(context).requestFocus(focusNodes[1]);
+                      },
+                      textInputAction: TextInputAction.next,
                       onChanged: (String value) {
                         title = value;
                       },
@@ -173,6 +187,10 @@ class _ModalForm extends State<ModalForm> {
                         padding: const EdgeInsets.symmetric(
                             vertical: 24, horizontal: 0),
                         child: TextFormField(
+                          onFieldSubmitted: (e) {
+                            FocusScope.of(context).requestFocus(focusNodes[2]);
+                          },
+                          textInputAction: TextInputAction.next,
                           onChanged: (value) {
                             formValue = int.parse(value);
                           },
@@ -202,6 +220,7 @@ class _ModalForm extends State<ModalForm> {
                           },
                         )),
                     TextFormField(
+                      textInputAction: TextInputAction.done,
                       onChanged: (value) {
                         setState(() {
                           des = value;
@@ -219,6 +238,14 @@ class _ModalForm extends State<ModalForm> {
                       onTapOutside: (event) {
                         focusNodes[2].unfocus();
                       },
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16.0, left: 8),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text("Type", style: TextStyle(fontSize: 22))
+                          ]),
                     ),
                     Padding(
                         padding: const EdgeInsets.symmetric(
@@ -241,14 +268,49 @@ class _ModalForm extends State<ModalForm> {
                                   ))
                           ],
                         )),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16.0, left: 8),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text("Category", style: TextStyle(fontSize: 22))
+                          ]),
+                    ),
                     Padding(
                         padding: const EdgeInsets.symmetric(
                             vertical: 16, horizontal: 0),
                         child: Column(
                           children: [
-                            for (int i = 0; i < 3; i++)
+                            for (int i = 0; i < _cats.names.length; i++)
                               ListTile(
                                   title: Text(catRadios[i]),
+                                  trailing: IconButton(
+                                      onPressed: () {
+                                        bloc.add(TrackAllRemoveCategory(
+                                            catRadios[i]));
+                                        setState(() {
+                                          _cats = bloc.state.getCategories();
+                                        });
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(snackBar(context,
+                                                title:
+                                                    "Removed ${catRadios[i]}",
+                                                onPressed: () {
+                                          bloc.add(TrackAllUndoCategory());
+                                          setState(() {
+                                            _cats = bloc.state.getCategories();
+                                          });
+                                        }));
+                                      },
+                                      focusColor:
+                                          Colors.redAccent.withOpacity(0.4),
+                                      hoverColor:
+                                          Colors.redAccent.withOpacity(0.3),
+                                      highlightColor: Colors.red,
+                                      icon: Icon(
+                                        MdiIcons.delete,
+                                        color: Colors.white70,
+                                      )),
                                   leading: Radio(
                                     value: i,
                                     groupValue: catRadioValue,
@@ -277,14 +339,27 @@ class _ModalForm extends State<ModalForm> {
                                         newCatFocus.attach(context);
                                       }
                                     },
-                                    //onTap: () {},
                                     title: const Text('Add Category'),
                                     children: [
-                                      TextFormField(
-                                        focusNode: newCatFocus,
-                                        decoration: InputDecoration(
-                                            hintText:
-                                                'e.g. Expremental Category'),
+                                      ListTile(
+                                        tileColor: Colors.transparent,
+                                        trailing: IconButton(
+                                            onPressed: () =>
+                                                addNewCategory(bloc),
+                                            icon: Icon(MdiIcons.plus)),
+                                        title: TextFormField(
+                                          focusNode: newCatFocus,
+                                          textInputAction: TextInputAction.send,
+                                          onFieldSubmitted: (e) =>
+                                              addNewCategory(bloc),
+                                          initialValue: "",
+                                          onChanged: (e) =>
+                                              setState(() => newCategory = e),
+                                          decoration: const InputDecoration(
+                                              border: InputBorder.none,
+                                              hintText:
+                                                  'e.g. Expremental Category'),
+                                        ),
                                       )
                                     ],
                                     // splashColor: Colors.deepOrange,
