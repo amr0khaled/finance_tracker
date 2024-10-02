@@ -1,69 +1,111 @@
 import 'package:flutter/material.dart';
 
-
-
-
-
-
-
 const seedColor = Color(0xFFbee4cf);
-//
-// const textColor = Color(0xFFe7f4ed);
-// const backgroundColor = Color(0xFF010403);
-// const primaryColor = Color(0xFFbee4cf);
-// const primaryFgColor = Color(0xFF010403);
-// const secondaryColor = Color(0xFF3e5649);
-// const secondaryFgColor = Color(0xFFe7f4ed);
-// const accentColor = Color(0xFF145732);
-// const accentFgColor = Color(0xFFe7f4ed);
-//   
-// const lightTextColor = Color(0xFF0b1811);
-// const lightBackgroundColor = Color(0xFFfbfefd);
-// const lightPrimaryColor = Color(0xFF1b412c);
-// const lightPrimaryFgColor = Color(0xFFfbfefd);
-// const lightSecondaryColor = Color(0xFFa9c1b4);
-// const lightSecondaryFgColor = Color(0xFF0b1811);
-// const lightAccentColor = Color(0xFFa8ebc6);
-// const lightAccentFgColor = Color(0xFF0b1811);
 
-final darkColorScheme = ColorScheme.fromSeed(
-  seedColor: seedColor,
-  brightness: Brightness.dark
-).copyWith(
-  surfaceTint: Colors.transparent
-);
-// const darkColorScheme = ColorScheme(
-//   brightness: Brightness.dark,
-//   primary: primaryColor,
-//   onPrimary: primaryFgColor,
-//   secondary: secondaryColor,
-//   onSecondary: secondaryFgColor,
-//   tertiary: accentColor,
-//   onTertiary: accentFgColor,
-//   surface: backgroundColor,
-//   onSurface: textColor,
-//   error: Brightness.dark == Brightness.light ? Color(0xffB3261E) : Color(0xffF2B8B5),
-//   onError: Brightness.dark == Brightness.light ? Color(0xffFFFFFF) : Color(0xff601410),
-// );
-final lightColorScheme = ColorScheme.fromSeed(
-  seedColor: seedColor,
-  brightness: Brightness.light
-).copyWith(
-  surfaceTint: Colors.transparent
-);
-// const lightColorScheme = ColorScheme(
-//   brightness: Brightness.light,
-//   primary: lightPrimaryColor,
-//   onPrimary: lightPrimaryFgColor,
-//   secondary: lightSecondaryColor,
-//   onSecondary: lightSecondaryFgColor,
-//   tertiary: lightAccentColor,
-//   onTertiary: lightAccentFgColor,
-//   surface: lightBackgroundColor,
-//   onSurface: lightTextColor,
-//   error: Brightness.light == Brightness.light ? Color(0xffB3261E) : Color(0xffF2B8B5),
-//   onError: Brightness.light == Brightness.light ? Color(0xffFFFFFF) : Color(0xff601410),
-// );
+const textColor = Color(0xFF080202);
+const backgroundColor = Color(0xFFF7F7F7);
+const primaryColor = Color(0xFF26F29A);
+const primaryContainerColor = Color(0xFFCDF6E4);
+const onPrimaryColor = Color(0xFF114A30);
+const onPrimaryContainerColor = Color(0xFF0C7347);
+const secondaryColor = Color(0xFF5C42C2);
+const secondaryContainerColor = Color(0xFFD8D3EC);
+const onSecondaryColor = Color(0xFFEEC3FF);
+const onSecondaryContainerColor = Color(0xFF5C42C2);
+const tertiaryColor = Color(0xFFFCFCFC);
+const onTertiaryColor = Color(0xFF474747);
+
+const errorColor = Color(0xFFE02724);
+const warningColor = Color(0xFFE0BA24);
+const successColor = Color(0xFF24E060);
+
+ColorScheme lightColorScheme = ColorScheme(
+    brightness: Brightness.light,
+    primary: primaryColor,
+    onPrimary: onPrimaryColor,
+    primaryContainer: primaryContainerColor,
+    onPrimaryContainer: onPrimaryContainerColor,
+    secondary: secondaryColor,
+    onSecondary: onSecondaryColor,
+    secondaryContainer: secondaryContainerColor,
+    onSecondaryContainer: onSecondaryContainerColor,
+    error: errorColor,
+    onError: Color.alphaBlend(Colors.white70, errorColor),
+    tertiary: tertiaryColor,
+    onTertiary: onTertiaryColor,
+    errorContainer: Color.alphaBlend(Colors.white70, errorColor),
+    onErrorContainer: errorColor,
+    tertiaryContainer: Color.alphaBlend(Colors.white60, onTertiaryColor),
+    onTertiaryContainer: tertiaryColor,
+    surfaceDim: Color.alphaBlend(Colors.black54, backgroundColor),
+    surface: backgroundColor,
+    surfaceTint: Color.alphaBlend(Colors.white24, backgroundColor),
+    surfaceBright: Color.alphaBlend(Colors.white38, backgroundColor),
+    onSurface: textColor,
+    surfaceContainerLowest: Color.alphaBlend(Colors.black54, backgroundColor),
+    surfaceContainerLow: Color.alphaBlend(Colors.black12, backgroundColor),
+    surfaceContainer: Color.alphaBlend(Colors.white10, backgroundColor),
+    surfaceContainerHigh: Color.alphaBlend(Colors.white24, backgroundColor),
+    surfaceContainerHighest: Color.alphaBlend(Colors.white54, backgroundColor),
+    outline: Colors.black,
+    shadow: const Color(0xFFD7D7D7));
+
+const darkTextColor = Color(0xFF080202);
+const darkBackgroundColor = Color(0xFFE7E7E7);
+const darkPrimaryColor = Color(0xFF26F29A);
+const darkPrimaryContainerColor = Color(0xFFCDF6E4);
+const darkOnPrimaryColor = Color(0xFF114A30);
+const darkOnPrimaryContainerColor = Color(0xFF0C7347);
+const darkSecondaryColor = Color(0xFF5C42C2);
+const darkSecondaryContainerColor = Color(0xFFD8D3EC);
+const darkOnSecondaryColor = Color(0xFFEEC3FF);
+const darkOnSecondaryContainerColor = Color(0xFF5C42C2);
+const darkTertiaryColor = Color(0xFFFCFCFC);
+const darkOnTertiaryColor = Color(0xFF474747);
+
+ColorScheme darkColorScheme = ColorScheme(
+    brightness: Brightness.light,
+    primary: darkPrimaryColor,
+    onPrimary: darkOnPrimaryColor,
+    primaryContainer: darkPrimaryContainerColor,
+    onPrimaryContainer: darkOnPrimaryContainerColor,
+    secondary: darkSecondaryColor,
+    onSecondary: darkOnSecondaryColor,
+    secondaryContainer: darkSecondaryContainerColor,
+    onSecondaryContainer: darkOnSecondaryContainerColor,
+    error: errorColor,
+    onError: Color.alphaBlend(Colors.white70, errorColor),
+    errorContainer: Color.alphaBlend(Colors.white70, errorColor),
+    onErrorContainer: errorColor,
+    tertiary: darkTertiaryColor,
+    onTertiary: darkOnTertiaryColor,
+    tertiaryContainer: Color.alphaBlend(Colors.white60, darkOnTertiaryColor),
+    onTertiaryContainer: darkTertiaryColor,
+    surfaceDim: Color.alphaBlend(Colors.black54, darkBackgroundColor),
+    surface: darkBackgroundColor,
+    surfaceTint: Color.alphaBlend(Colors.white24, darkBackgroundColor),
+    surfaceBright: Color.alphaBlend(Colors.white38, darkBackgroundColor),
+    onSurface: darkTextColor,
+    surfaceContainerLowest:
+        Color.alphaBlend(Colors.black54, darkBackgroundColor),
+    surfaceContainerLow: Color.alphaBlend(Colors.black12, darkBackgroundColor),
+    surfaceContainer: Color.alphaBlend(Colors.white10, darkBackgroundColor),
+    surfaceContainerHigh: Color.alphaBlend(Colors.white24, darkBackgroundColor),
+    surfaceContainerHighest:
+        Color.alphaBlend(Colors.white54, darkBackgroundColor),
+    outline: Colors.white,
+    shadow: const Color(0xFFD7D7D7));
+
+
+
+
+
+//final darkColorScheme =
+//    ColorScheme.fromSeed(seedColor: seedColor, brightness: Brightness.dark)
+//        .copyWith(surfaceTint: Colors.transparent);
+//final lightColorScheme =
+//    ColorScheme.fromSeed(seedColor: seedColor, brightness: Brightness.light)
+//        .copyWith(surfaceTint: Colors.transparent);
 
 // Gradient 
 /*
