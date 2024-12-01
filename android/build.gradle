@@ -4,6 +4,9 @@ allprojects {
         mavenCentral()
     }
 }
+// android {
+//     ndkVersion = "25.1.8937393"
+// }
 
 rootProject.buildDir = "../build"
 subprojects {
@@ -12,6 +15,16 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 }
+
+// compileOptions {
+//     sourceCompatibility JavaVersion.VERSION_21
+//     targetCompatibility JavaVersion.VERSION_21
+// }
+// kotlinOptions {
+//     jvmTarget = JavaVersion.VERSION_21
+// }
+
+
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir

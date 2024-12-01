@@ -1,29 +1,28 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:finance_tracker/components/card.dart';
-import 'package:finance_tracker/components/filter_tracks.dart';
-import 'package:finance_tracker/components/overlay_menu.dart';
-import 'package:finance_tracker/components/searchbar.dart';
+import 'package:finance_tracker/layout/drawer/drawer.dart';
+import 'package:finance_tracker/layout/drawer/drawer_item.dart';
+import 'package:finance_tracker/layout/nav_bar/nav_bar.dart';
+import 'package:finance_tracker/layout/nav_bar/nav_bar_item.dart';
 import 'package:finance_tracker/theme.dart';
 import 'package:finance_tracker/utils/domain_layer/track_storage.dart';
 import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
+import 'package:finance_tracker/views/accounts.dart';
+import 'package:finance_tracker/views/add_view.dart';
+import 'package:finance_tracker/views/charts.dart';
+import 'package:finance_tracker/views/queries.dart';
+import 'package:finance_tracker/views/settings.dart';
+import 'package:finance_tracker/views/view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:json_theme/json_theme.dart';
-import 'dart:convert';
 import 'dart:io';
-
-import 'package:finance_tracker/views/modal_form.dart';
-import 'package:finance_tracker/views/income_view.dart';
-import 'package:finance_tracker/views/expense_view.dart';
-import 'package:finance_tracker/views/view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unicons/unicons.dart';
 
@@ -32,20 +31,28 @@ Future<void> main() async {
     FlutterError.presentError(details);
     if (kReleaseMode) exit(1);
   };
-
   WidgetsFlutterBinding.ensureInitialized();
+  // cache
+
   // Initialinzing Local storage
-  final localStorage = TrackStorage(await SharedPreferences.getInstance());
+  final instance = await SharedPreferences.getInstance();
+  final localStorage = TrackStorage(instance);
+  final mode = PlatformDispatcher.instance.platformBrightness;
 
-  // Initializing theme from JSON
-  final darkThemeSrc = await rootBundle.loadString('assets/dark_theme.json');
-  final themeSrc = await rootBundle.loadString('assets/light_theme.json');
-
-  final darkThemeJson = jsonDecode(darkThemeSrc);
-  final themeJson = jsonDecode(themeSrc);
-
-  final darkTheme = ThemeDecoder.decodeThemeData(darkThemeJson)!;
-  final theme = ThemeDecoder.decodeThemeData(themeJson)!;
+  SystemChrome.setSystemUIOverlayStyle(mode == Brightness.light
+      ? SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: lightColorScheme.surface,
+          statusBarIconBrightness: Brightness.dark,
+          systemNavigationBarColor: lightColorScheme.surface,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        )
+      : SystemUiOverlayStyle.dark.copyWith(
+          statusBarColor: darkColorScheme.surface,
+          statusBarIconBrightness: Brightness.dark,
+          systemNavigationBarColor: darkColorScheme.surface,
+          systemNavigationBarIconBrightness: Brightness.light,
+        ));
+  print(json.decode('{"categories": [1, 2, 3, 4]}'));
   // Add localStorage Repo to provider
   runApp(RepositoryProvider.value(
     value: localStorage,
@@ -84,10 +91,110 @@ class MyApp extends StatelessWidget {
           .read<TrackCollectionBloc>()
           .add(const TrackCollectionPushDataEvent());
     });
+    TextStyle textStyle(double fontSize, {String? fontFamily}) {
+      FontWeight weight = FontWeight.w400;
+      if (fontSize < 8) weight = FontWeight.w100;
+      if (fontSize < 12) weight = FontWeight.w200;
+      if (fontSize < 15) weight = FontWeight.w300;
+      if (fontSize > 16) weight = FontWeight.w400;
+      if (fontSize > 18) weight = FontWeight.w500;
+      if (fontSize > 20) weight = FontWeight.w600;
+      if (fontSize > 24) weight = FontWeight.w700;
+      if (fontSize > 28) weight = FontWeight.w800;
+      if (fontSize > 32) weight = FontWeight.w900;
+      return TextStyle(
+          fontSize: fontSize,
+          color: Colors.black,
+          fontFamily: fontFamily ?? 'Poppins',
+          fontWeight: weight);
+    }
+
     return MaterialApp(
       title: 'Finance Tracker',
-      theme: ThemeData(colorScheme: lightColorScheme, fontFamily: 'Poppins'),
-      darkTheme: ThemeData(colorScheme: darkColorScheme, fontFamily: 'Poppins'),
+      debugShowMaterialGrid: false,
+      debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.light,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        useMaterial3: true,
+        colorScheme: lightColorScheme,
+        fontFamily: 'Poppins',
+        inputDecorationTheme: InputDecorationTheme(
+          hoverColor: Colors.red,
+          border: const UnderlineInputBorder(
+            borderSide: BorderSide(width: 2.0, color: Colors.black),
+          ),
+          errorBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+                width: 1.0, color: Theme.of(context).colorScheme.error),
+          ),
+          enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(width: 2.0, color: Colors.black),
+          ),
+        ),
+        textTheme: TextTheme(
+          titleLarge: textStyle(24),
+          titleMedium: textStyle(20),
+          titleSmall: textStyle(12),
+          headlineLarge: textStyle(28),
+          headlineMedium: textStyle(24),
+          headlineSmall: textStyle(20),
+          bodyLarge: textStyle(16),
+          bodyMedium: textStyle(12),
+          bodySmall: textStyle(8),
+          labelLarge: textStyle(18),
+          labelMedium: textStyle(16),
+          labelSmall: textStyle(12),
+          displayLarge: textStyle(32),
+          displayMedium: textStyle(24),
+          displaySmall: textStyle(16),
+        ),
+      ),
+      darkTheme: ThemeData(
+          brightness: Brightness.light,
+          useMaterial3: true,
+          inputDecorationTheme: InputDecorationTheme(
+            hoverColor: Colors.red,
+            border: const UnderlineInputBorder(
+              borderSide: BorderSide(width: 2.0, color: Colors.black),
+            ),
+            errorBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                  width: 2.0, color: Theme.of(context).colorScheme.error),
+            ),
+            enabledBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(width: 2.0, color: Colors.black),
+            ),
+          ),
+          textTheme: TextTheme(
+            titleLarge: textStyle(28),
+            titleMedium: textStyle(24),
+            titleSmall: textStyle(20),
+            headlineLarge: textStyle(28),
+            headlineMedium: textStyle(24),
+            headlineSmall: textStyle(20),
+            bodyLarge: textStyle(16),
+            bodyMedium: textStyle(12),
+            bodySmall: textStyle(8),
+            labelLarge: textStyle(18),
+            labelMedium: textStyle(16),
+            labelSmall: textStyle(12),
+            displayLarge: textStyle(32),
+            displayMedium: textStyle(24),
+            displaySmall: textStyle(16),
+          ),
+          appBarTheme: AppBarTheme(
+            systemOverlayStyle: SystemUiOverlayStyle(
+              statusBarIconBrightness: Brightness.dark,
+              statusBarColor: Theme.of(context).colorScheme.surface,
+              systemNavigationBarColor: Theme.of(context).colorScheme.surface,
+              systemStatusBarContrastEnforced: true,
+            ),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            foregroundColor: Theme.of(context).colorScheme.onSurface,
+          ),
+          colorScheme: darkColorScheme,
+          fontFamily: 'Poppins'),
       home: const AppContainer(),
     );
   }
@@ -102,7 +209,13 @@ class AppContainer extends StatefulWidget {
 
 class _AppContainerState extends State<AppContainer> {
   bool isSelectedCategoryMenuOpen = false;
+  bool dragEnded = true;
+  bool dragStart = false;
+  double dragNow = 0;
+  double dragMin = 145;
+  double dragMax = (145 + 340) - 85;
 
+  late OverlayEntry entry;
   final List<String> categoriesNames = [
     'OverAll',
     'Personal',
@@ -112,62 +225,8 @@ class _AppContainerState extends State<AppContainer> {
     'Savings',
   ];
   String selectedCategory = '';
-  late OverlayEntry overlayEntry;
-  @override
-  void initState() {
-    super.initState();
-    overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: 60,
-        left: 0,
-        child: Material(
-          child: AnimatedContainer(
-            duration: Durations.medium2,
-            curve: Curves.easeIn,
-            width: MediaQuery.of(context).size.width,
-            height:
-                isSelectedCategoryMenuOpen ? 52.0 * categoriesNames.length : 0,
-            decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                border: const Border(
-                    bottom: BorderSide(width: 2, color: Colors.black)),
-                borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(12),
-                    bottomRight: Radius.circular(12))),
-            child: AnimatedList(
-                initialItemCount: categoriesNames.length,
-                itemBuilder: (context, i, a) {
-                  return SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ListTile(
-                        style: ListTileStyle.list,
-                        hoverColor: Color.alphaBlend(Colors.black12,
-                            Theme.of(context).colorScheme.surface),
-                        splashColor: Color.alphaBlend(Colors.black26,
-                            Theme.of(context).colorScheme.surface),
-                        dense: true,
-                        title: Text(categoriesNames[i],
-                            style: const TextStyle(
-                                fontFamily: 'Quicksand', fontSize: 24)),
-                        onTap: () => {
-                              setState(() {
-                                selectedCategory = categoriesNames[i];
-                                overlayEntry.remove();
-                              })
-                            }),
-                  );
-                }),
-          ),
-        ),
-      ),
-    );
-  }
 
-  void showOverlay(BuildContext context) {
-    Overlay.of(context).insert(overlayEntry);
-  }
-
+  double headerHeight = 145;
   int index = 0;
   List<Icon> navIcons = [
     Icon(
@@ -178,8 +237,8 @@ class _AppContainerState extends State<AppContainer> {
       MdiIcons.walletBifold,
       size: 32,
     ),
-    const Icon(
-      UniconsSolid.chart_pie,
+    Icon(
+      MdiIcons.chartDonut,
       size: 32,
     ),
     Icon(
@@ -188,455 +247,142 @@ class _AppContainerState extends State<AppContainer> {
     )
   ];
   List<String> navTitle = ['Queries', 'Accounts', 'Charts', 'Settings'];
+  final GlobalKey<ScaffoldState> _key = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
-    const offset = Offset(0, 60);
-    double navRowWidth = (MediaQuery.of(context).size.width - 90) / 2;
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size(double.infinity, 145),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: 85,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(width: 2))),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 25),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              MdiIcons.menu,
-                              size: 36,
-                              opticalSize: 32,
-                            )),
-                        Row(
-                          children: [
-                            const Text(''),
-                            // DropdownMenu(
-                            //     menuStyle: const MenuStyle()
-                            //     ,
-                            //
-                            //     dropdownMenuEntries:
-                            //         List.generate(categoriesNames.length, (i) {
-                            //       return DropdownMenuEntry(
-                            //           value: categoriesNames[i],
-                            //           label: categoriesNames[i]);
-                            //     })),
-                            // DropdownButton(
-                            //     value: 'OverAll',
-
-                            //     items: List.generate(categoriesNames.length, (i) {
-                            //       return DropdownMenuItem(
-                            //           value: categoriesNames[i],
-                            //           child: Text(categoriesNames[i]));
-                            //     }),
-                            //     onChanged: (i) {})
-                            IconButton(
-                                padding: const EdgeInsets.all(0),
-                                onPressed: () {
-                                  setState(() => isSelectedCategoryMenuOpen =
-                                      !isSelectedCategoryMenuOpen);
-                                  setState(() {
-                                    Navigator.of(context).push(DialogRoute(
-                                        context: context,
-                                        anchorPoint: const Offset(0, 60),
-                                        builder: (context) => Container(
-                                              color: Colors.greenAccent,
-                                              child: Material(
-                                                elevation: 0,
-                                                shadowColor: Colors.transparent,
-                                                type: MaterialType.transparency,
-                                                borderOnForeground: true,
-                                                child: Container(
-                                                    child: Text('Hello')),
-                                              ),
-                                            )));
-                                  });
-                                },
-                                isSelected: isSelectedCategoryMenuOpen,
-                                visualDensity: VisualDensity.compact,
-                                highlightColor: Color.alphaBlend(
-                                    Colors.white70, Colors.black),
-                                selectedIcon: Icon(
-                                  MdiIcons.chevronUp,
-                                  color: Colors.black,
-                                  size: 24,
-                                  opticalSize: 24,
-                                ),
-                                icon: Icon(
-                                  MdiIcons.chevronDown,
-                                  size: 24,
-                                  opticalSize: 24,
-                                )),
-                            const Text(
-                              'Over All',
-                              style: TextStyle(
-                                  fontFamily: 'Quicksand',
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w300),
-                            )
-                          ],
-                        ),
-                        IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              MdiIcons.dotsVertical,
-                              size: 32,
-                              opticalSize: 32,
-                            ))
-                      ],
-                    ),
-                  ),
-                )
-              ],
-            ),
-            Stack(
-              children: [
-                Container(
-                  height: 60,
-                  alignment: AlignmentDirectional.center,
-                  constraints:
-                      const BoxConstraints(minWidth: 120, maxWidth: 140),
-                  decoration: BoxDecoration(
-                      border: Border.all(
-                          strokeAlign: BorderSide.strokeAlignOutside, width: 2),
-                      borderRadius: const BorderRadius.only(
-                        bottomRight: Radius.circular(12),
-                        bottomLeft: Radius.circular(12),
-                      )),
-                  child: Container(
-                    height: 60,
-                    alignment: AlignmentDirectional.center,
-                    constraints:
-                        const BoxConstraints(minWidth: 120, maxWidth: 140),
-                    decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                            end: Alignment.bottomCenter,
-                            begin: Alignment.topCenter,
-                            colors: [
-                              Theme.of(context).colorScheme.surface,
-                              Theme.of(context).colorScheme.secondaryContainer,
-                            ]),
-                        borderRadius: const BorderRadius.only(
-                            bottomLeft: Radius.circular(12),
-                            bottomRight: Radius.circular(12)),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Theme.of(context).colorScheme.surface,
-                              blurRadius: 0,
-                              offset: const Offset(0, -2))
-                        ]),
-                    child: Text(
-                      "\$99,999",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 24,
-                          color: Theme.of(context).colorScheme.secondary),
-                    ),
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
+    List<Widget> views = [
+      ViewBootStrap(QueriesView()),
+      ViewBootStrap(AccountsView()),
+      ViewBootStrap(ChartsView()),
+      ViewBootStrap(SettingsView()),
+    ];
+    List<Icon> sideIcons = [
+      Icon(
+        MdiIcons.viewGrid,
+        size: 32,
       ),
-      bottomNavigationBar: SizedBox(
-        height: 116,
-        width: double.infinity,
-        child: Stack(
-          children: [
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
+      Icon(
+        MdiIcons.formatListChecks,
+        size: 32,
+      ),
+      const Icon(
+        UniconsLine.transaction,
+        size: 32,
+      ),
+    ];
+    List<DrawerItem> sideItems = List.generate(sideIcons.length, (i) {
+      return DrawerItem(icon: sideIcons[i], onTap: () {});
+    });
+    List<NavBarItem> items = List.generate(navIcons.length, (i) {
+      return NavBarItem(
+          label: navTitle[i], icon: navIcons[i], onPressed: () {});
+    });
+    return Scaffold(
+        key: _key,
+        drawerScrimColor: Colors.transparent,
+        primary: true,
+        endDrawer: Material(
+          child: Ink(
+            child: const Text('Hello'),
+          ),
+        ),
+        drawer: NewDrawer(scaffoldKey: _key, items: sideItems),
+        appBar: PreferredSize(
+          preferredSize: Size(double.infinity, headerHeight),
+          child: SafeArea(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(width: 2))),
+              child: SizedBox(
                 height: 85,
-                decoration: const BoxDecoration(
-                  color: Colors.transparent,
-                  border:
-                      Border(top: BorderSide(color: Colors.black, width: 2)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                        width: navRowWidth,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: List.generate(2, (i) {
-                            return Column(
-                              children: [
-                                IconButton(
-                                  style: ButtonStyle(iconColor:
-                                      WidgetStateProperty.resolveWith((states) {
-                                    if (states.contains(WidgetState.selected)) {
-                                      return Theme.of(context)
-                                          .colorScheme
-                                          .onPrimaryContainer;
-                                    }
-                                    return Colors.black;
-                                  })),
-                                  isSelected: index == i,
+                width: double.infinity,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 25),
+                  child: Stack(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                              style: IconButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12))),
+                              onPressed: () {
+                                _key.currentState!.openDrawer();
+                              },
+                              icon: Icon(
+                                MdiIcons.menu,
+                                size: 36,
+                                opticalSize: 32,
+                              )),
+                          Row(
+                            children: [
+                              const Text(''),
+                              IconButton(
+                                  padding: const EdgeInsets.all(0),
                                   onPressed: () {
                                     setState(() {
-                                      index = i;
+                                      isSelectedCategoryMenuOpen =
+                                          !isSelectedCategoryMenuOpen;
                                     });
                                   },
-                                  icon: navIcons[i],
-                                ),
-                                AnimatedSize(
-                                    duration: Durations.medium2,
-                                    child: Container(
-                                      height: index == i ? 20 : 0,
-                                      child: Text(navTitle[i]),
-                                    ))
-                              ],
-                            );
-                          }),
-                        )),
-                    SizedBox(
-                        width: navRowWidth,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: List.generate(2, (i) {
-                            return Column(
-                              children: [
-                                IconButton(
-                                  style: ButtonStyle(iconColor:
-                                      WidgetStateProperty.resolveWith((states) {
-                                    if (states.contains(WidgetState.selected)) {
-                                      return Theme.of(context)
-                                          .colorScheme
-                                          .onPrimaryContainer;
-                                    }
-                                    return Colors.black;
-                                  })),
-                                  isSelected: index == i + 2,
-                                  onPressed: () {
-                                    setState(() {
-                                      index = i + 2;
-                                    });
-                                  },
-                                  icon: navIcons[i + 2],
-                                ),
-                                Text(navTitle[i + 2])
-                              ],
-                            );
-                          }),
-                        ))
-                  ],
+                                  isSelected: isSelectedCategoryMenuOpen,
+                                  visualDensity: VisualDensity.compact,
+                                  highlightColor: Color.alphaBlend(
+                                      Colors.white70, Colors.black),
+                                  selectedIcon: Icon(
+                                    MdiIcons.chevronUp,
+                                    color: Colors.black,
+                                    size: 24,
+                                    opticalSize: 24,
+                                  ),
+                                  icon: Icon(
+                                    MdiIcons.chevronDown,
+                                    size: 24,
+                                    opticalSize: 24,
+                                  )),
+                              const Text(
+                                'Over All',
+                                style: TextStyle(
+                                    fontFamily: 'Quicksand',
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w300),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                              onPressed: () {
+                                _key.currentState!.openEndDrawer();
+                              },
+                              icon: Icon(
+                                MdiIcons.dotsVertical,
+                                size: 32,
+                                opticalSize: 32,
+                              ))
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            Positioned(
-                top: 0,
-                left: (MediaQuery.of(context).size.width / 2) - 32,
-                child: Transform.rotate(
-                  angle: 0.785398,
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        border: Border.all(color: Colors.black, width: 2)),
-                    child: IconButton(
-                        style: ButtonStyle(
-                          fixedSize: const WidgetStatePropertyAll(
-                              Size(double.infinity, double.infinity)),
-                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(0))),
-                        ),
-                        onPressed: () {},
-                        icon: Transform.rotate(
-                            angle: 0.785398, child: Icon(MdiIcons.plus))),
-                  ),
-                )),
-          ],
+          ),
         ),
-      ),
-    );
+        body: views[index],
+
+        //Center(child: DropMenu()),
+        bottomNavigationBar: NavBar(
+          items: items,
+          onChange: (i) {
+            print('Jump to $i');
+            setState(() => index = i);
+          },
+          onActionPressed: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => const AddView()));
+          },
+        ));
   }
 }
-
-// class AppContainer extends StatefulWidget {
-//   const AppContainer({super.key, required this.title});
-//   final String title;
-//
-//   @override
-//   State<AppContainer> createState() => _AppContainerState();
-// }
-//
-// List<TrackState> incomeData = [];
-// List<TrackState> expenseData = [];
-//
-// List<TrackState> getData(e) {
-//   if (e == TrackType.income) {
-//     return incomeData;
-//   }
-//   return expenseData;
-// }
-//
-// class _AppContainerState extends State<AppContainer> {
-//   var index = 0;
-//   @override
-//   void initState() {
-//     super.initState();
-//   }
-//   // TODO: Add Tags to tracks
-//   // By adding a checkbox for adding tags in "New Track Modal"
-//   // - add an ability to add a tags and groups and collections
-//   // - add an ability to add custom filters to user's prefrenced
-//   // - add a comment for expense or income
-//   // - add a level of importance (Importance Rate) in modal and add an ability to just ignore it
-//   // - Monthly log & Weekly log for expenses and incomes
-//   // - suggest what to expenses to avoid by "Importance Rate"
-//
-//   List<IconButton> items(BuildContext context) {
-//     ButtonStyle buttonStyle = ButtonStyle(
-//       padding: WidgetStateProperty.resolveWith<EdgeInsetsGeometry>(
-//           (Set<WidgetState> states) {
-//         return const EdgeInsets.symmetric(vertical: 8, horizontal: 24);
-//       }),
-//     );
-//     return [
-//       IconButton(
-//         isSelected: index == 0 ? true : false,
-//         onPressed: () {
-//           setState(() {
-//             index = 0;
-//             control.animateToPage(0,
-//                 duration: Durations.medium2, curve: Curves.linearToEaseOut);
-//           });
-//         },
-//         style: buttonStyle,
-//         tooltip: 'Incomes',
-//         enableFeedback: true,
-//         iconSize: 28,
-//         focusColor: Colors.red,
-//         color: Theme.of(context).colorScheme.onSecondaryContainer,
-//         selectedIcon: Icon(
-//           MdiIcons.walletBifold,
-//         ),
-//         icon: Icon(
-//           MdiIcons.walletBifoldOutline,
-//         ),
-//       ),
-//       IconButton(
-//         isSelected: index == 1 ? true : false,
-//         onPressed: () {
-//           setState(() {
-//             index = 1;
-//             control.animateToPage(1,
-//                 duration: Durations.medium2, curve: Curves.linearToEaseOut);
-//           });
-//         },
-//         tooltip: 'Expenses',
-//         enableFeedback: true,
-//         iconSize: 28,
-//         focusColor: Colors.red,
-//         color: Theme.of(context).colorScheme.onSecondaryContainer,
-//         style: buttonStyle,
-//         selectedIcon: Icon(
-//           MdiIcons.creditCard,
-//         ),
-//         icon: Icon(
-//           MdiIcons.creditCardOutline,
-//         ),
-//       ),
-//     ];
-//   }
-//
-//   PageController control =
-//       PageController(keepPage: true, initialPage: 0, viewportFraction: 0.9999);
-//   @override
-//   Widget build(BuildContext context) {
-//     Size screen = MediaQuery.sizeOf(context);
-//     double navigationSideMargin = screen.width * 0.05;
-//     double navigationBottomMargin = navigationSideMargin * 0.5;
-//     return BlocProvider(
-//       create: (context) => BlocProvider.of<TrackCollectionBloc>(context),
-//       child: Scaffold(
-//         appBar: PreferredSize(
-//             preferredSize: Size(screen.width, 56 + 12 + 24 + 32),
-//             child: const Column(
-//               children: [
-//                 SearchBarWidget(),
-//                 FilterTracks(),
-//               ],
-//             )),
-//         body: PageView(
-//           controller: control,
-//           pageSnapping: true,
-//           onPageChanged: (i) {
-//             setState(() {
-//               index = i;
-//             });
-//           },
-//           children: const [
-//             ViewBootStrap(IncomeView()),
-//             ViewBootStrap(ExpenseView())
-//           ],
-//         ),
-//         bottomNavigationBar: SafeArea(
-//             key: const Key('Navigation Safe Area'),
-//             child: Container(
-//                 margin: EdgeInsets.fromLTRB(navigationSideMargin, 0,
-//                     navigationSideMargin, navigationBottomMargin),
-//                 key: const Key('Navigation Container'),
-//                 decoration: const BoxDecoration(
-//                   color: Colors.transparent,
-//                 ),
-//                 transformAlignment: Alignment.center,
-//                 width: screen.width,
-//                 height: 64.0,
-//                 child: SizedBox(
-//                     key: const Key('Navigation Sized Box'),
-//                     width: screen.width - (screen.width * 0.1),
-//                     height: 64.0,
-//                     child: DecoratedBox(
-//                         key: const Key('Navigation Decorated Box'),
-//                         decoration: BoxDecoration(
-//                           color:
-//                               Theme.of(context).colorScheme.secondaryContainer,
-//                           borderRadius:
-//                               const BorderRadius.all(Radius.circular(24)),
-//                         ),
-//                         child: Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceAround,
-//                           crossAxisAlignment: CrossAxisAlignment.center,
-//                           children: items(context),
-//                         ))))),
-//         floatingActionButton: FloatingActionButton(
-//           backgroundColor: Theme.of(context).colorScheme.tertiary,
-//           onPressed: () {
-//             Navigator.push(
-//                 context,
-//                 MaterialPageRoute(
-//                   builder: (context) => BlocProvider.value(
-//                       value: BlocProvider.of<TrackCollectionBloc>(context),
-//                       child: const ModalForm()),
-//                   fullscreenDialog: true,
-//                   allowSnapshotting: true,
-//                   maintainState: true,
-//                 ));
-//           },
-//           elevation: 5,
-//           enableFeedback: true,
-//           tooltip: 'Add Expense',
-//           child:
-//               Icon(Icons.add, color: Theme.of(context).colorScheme.onTertiary),
-//         ),
-//       ),
-//     );
-//   }
-// }

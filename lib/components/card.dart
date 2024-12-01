@@ -6,12 +6,12 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 SnackBar snackBar(BuildContext context,
-    {String? title, Function()? onPressed, Offset? offset}) {
+    {String? title, Function()? onPressed}) {
   Color text = Theme.of(context).colorScheme.surface;
   return SnackBar(
     content: Text(
       title ?? 'TEST',
-      style: TextStyle(color: text, fontSize: 18),
+      style: TextStyle(color: text, fontSize: 14),
     ),
     duration: const Duration(seconds: 5),
     showCloseIcon: true,
@@ -30,7 +30,6 @@ SnackBar snackBar(BuildContext context,
           () {
             BlocProvider.of<TrackCollectionBloc>(context)
                 .add(const TrackCollectionUndoTrackEvent());
-            offset = Offset.zero;
           },
     ),
   );

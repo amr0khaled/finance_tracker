@@ -45,9 +45,11 @@ dependencies:
   hydrated_bloc: ^9.1.5
   rxdart: ^0.28.0
   equatable: ^2.0.5
-  shared_preferences: ^2.3.2
   uuid: ^4.4.2
   flutter_slidable: ^3.1.1
+  shared_preferences: ^2.3.3
+  path_provider: ^2.1.5
+  flutter_native_contact_picker: ^0.0.9
 
 dev_dependencies:
   flutter_test:

@@ -8,7 +8,7 @@ class ViewBootStrap extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 32, 20, 0),
       child: child,
     ));
   }
