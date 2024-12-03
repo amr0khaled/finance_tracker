@@ -1,4 +1,4 @@
-part of 'tracks_bloc.dart';
+part of 'bloc.dart';
 
 enum TrackCreationStatus { initial, inProgress, done, failure }
 

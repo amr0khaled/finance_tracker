@@ -1,11 +1,5 @@
 part of "./bloc.dart";
 
-class CategoryEvent extends Equatable {
-  const CategoryEvent();
-  @override
-  get props => [];
-}
-
 class CategoriesEvent extends Equatable {
   const CategoriesEvent();
   @override
@@ -14,7 +8,7 @@ class CategoriesEvent extends Equatable {
 
 class AddCategoryEvent extends CategoriesEvent {
   const AddCategoryEvent(this.value);
-  final String value;
+  final CategoryData value;
 
   @override
   get props => [value];
@@ -22,10 +16,10 @@ class AddCategoryEvent extends CategoriesEvent {
 
 class DeleteCategoryEvent extends CategoriesEvent {
   const DeleteCategoryEvent(this.value);
-  final String value;
+  final CategoryData value;
 
   @override
-  get props => [];
+  get props => [value];
 }
 
 class SaveCategoriesEvent extends CategoriesEvent {
@@ -40,12 +34,4 @@ class LoadCategoriesEvent extends CategoriesEvent {
 
   @override
   get props => [];
-}
-
-class EditCategoryEvent extends CategoryEvent {
-  const EditCategoryEvent(this.newValue);
-  final String newValue;
-
-  @override
-  List<Object?> get props => [newValue];
 }

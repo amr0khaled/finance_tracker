@@ -1,4 +1,4 @@
-part of 'tracks_bloc.dart';
+part of 'bloc.dart';
 
 // WARNING: There are no events for Track
 // so we will implement function for the events of the Collection inside Track class

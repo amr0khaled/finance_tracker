@@ -1,10 +1,14 @@
 import 'package:finance_tracker/components/card.dart';
 import 'package:finance_tracker/components/popup_transaction.dart';
+import 'package:finance_tracker/components/searchbar.dart';
 import 'package:finance_tracker/components/snack_bar.dart';
 import 'package:finance_tracker/layout/add_view/add_action_buttons.dart';
 import 'package:finance_tracker/layout/add_view/add_category_button.dart';
+import 'package:finance_tracker/main.dart';
+import 'package:finance_tracker/utils/categories/bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
 import 'package:flutter_native_contact_picker/model/contact.dart';
 
@@ -33,16 +37,25 @@ class _AddTransactionState extends State<AddTransaction> {
     'Pet',
   ];
   Set<String> _selectedCategories = {};
-  String getNewCategory() {
+  String getNewCategory(BuildContext context) {
     showDialog(
-      context: context,
-      builder: (context) => PopupInputTransaction(title: 'Add new category'),
-    );
+        context: context,
+        builder: (context) => PopupInputTransaction(
+              title: 'Add new category',
+              onDone: (e) {
+                final bloc = context.read<CategoryBloc>();
+                print('Add');
+                bloc.add(AddCategoryEvent(e));
+                bloc.add(const SaveCategoriesEvent());
+                bloc.add(const LoadCategoriesEvent());
+              },
+            ));
     return '';
   }
 
   @override
   Widget build(BuildContext context) {
+    final categoryBloc = context.read<CategoryBloc>();
     return Scaffold(
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24)
@@ -165,25 +178,31 @@ class _AddTransactionState extends State<AddTransaction> {
                           child: Wrap(
                             alignment: WrapAlignment.center,
                             children: [
-                              CategoryButton(
-                                  lastButton: true,
-                                  lastLabel: 'New',
-                                  onLastButton: () async {
-                                    getNewCategory();
-                                  },
-                                  onChange: (e) {
-                                    print(e);
-                                  },
-                                  segments: [
-                                    for (var i in categories)
-                                      CategorySegment(
-                                          label: Text(
-                                            i,
-                                            style: TextStyle(fontSize: 16),
-                                          ),
-                                          value: i)
-                                  ],
-                                  selected: _selectedCategories)
+                              BlocBuilder<CategoryBloc, CategoriesState>(
+                                  buildWhen: (p, n) =>
+                                      p.data.length != n.data.length ||
+                                      p.status != n.status,
+                                  builder: (context, CategoriesState state) =>
+                                      CategoryButton(
+                                          lastButton: true,
+                                          lastLabel: 'New',
+                                          onLastButton: () async {
+                                            getNewCategory(context);
+                                          },
+                                          onChange: (e) {
+                                            print(e);
+                                          },
+                                          segments: [
+                                            for (var i in state.data)
+                                              CategorySegment(
+                                                  label: Text(
+                                                    i,
+                                                    style:
+                                                        TextStyle(fontSize: 16),
+                                                  ),
+                                                  value: i)
+                                          ],
+                                          selected: _selectedCategories))
                             ],
                           ),
                         ),

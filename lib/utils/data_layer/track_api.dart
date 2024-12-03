@@ -1,4 +1,4 @@
-import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
+import 'package:finance_tracker/utils/tracks/bloc.dart';
 
 typedef TrackName = String;
 typedef TrackValue = int;

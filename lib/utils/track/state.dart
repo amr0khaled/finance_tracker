@@ -1,4 +1,4 @@
-part of '../tracks/tracks_bloc.dart';
+part of '../tracks/bloc.dart';
 
 typedef TrackId = String;
 typedef TrackValue = int;

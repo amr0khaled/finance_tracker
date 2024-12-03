@@ -61,9 +61,9 @@ class PopupTransaction extends StatelessWidget {
 }
 
 class PopupInputTransaction extends StatefulWidget {
-  PopupInputTransaction({super.key, required this.title, this.onDone});
+  PopupInputTransaction({super.key, required this.title, required this.onDone});
   final String title;
-  void Function(String)? onDone;
+  void Function(String) onDone;
 
   @override
   State<PopupInputTransaction> createState() => _PopupInputTransactionState();
@@ -115,34 +115,32 @@ class _PopupInputTransactionState extends State<PopupInputTransaction> {
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Expanded(
-                child: TextFormField(
-                  cursorColor: Colors.black,
-                  style: const TextStyle(fontSize: 16),
-                  onChanged: (e) => setState(() => _value = e),
-                  maxLines: 1,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
-                    FilteringTextInputFormatter.allow(RegExp(r'[A-z]'))
-                  ],
-                  decoration: InputDecoration(
-                      errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                              width: 2,
-                              color: Theme.of(context).colorScheme.error)),
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                              width: 2,
-                              color: Theme.of(context).colorScheme.primary)),
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(width: 2, color: Colors.black)),
-                      hintText: 'Type here',
-                      hintStyle: const TextStyle(color: Colors.black87)),
-                ),
+              child: TextFormField(
+                cursorColor: Colors.black,
+                style: const TextStyle(fontSize: 16),
+                onChanged: (e) => setState(() => _value = e),
+                maxLines: 1,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
+                  FilteringTextInputFormatter.allow(RegExp(r'[A-z]'))
+                ],
+                decoration: InputDecoration(
+                    errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                            width: 2,
+                            color: Theme.of(context).colorScheme.error)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                            width: 2,
+                            color: Theme.of(context).colorScheme.primary)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide:
+                            const BorderSide(width: 2, color: Colors.black)),
+                    hintText: 'Type here',
+                    hintStyle: const TextStyle(color: Colors.black87)),
               ),
             ),
             LayoutBuilder(builder: (context, box) {
@@ -158,7 +156,9 @@ class _PopupInputTransactionState extends State<PopupInputTransaction> {
                             ? () {
                                 Navigator.pop(context);
                               }
-                            : () {},
+                            : () {
+                                widget.onDone(_value);
+                              },
                         style: ElevatedButton.styleFrom(
                             fixedSize: Size((box.maxWidth / 2) - 20, 50),
                             backgroundColor: i == 0

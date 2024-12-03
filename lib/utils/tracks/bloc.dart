@@ -4,11 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
-part 'tracks_state.dart';
-part 'tracks_event.dart';
+part 'state.dart';
+part 'event.dart';
 
-part '../track/track_state.dart';
-part '../track/track_event.dart';
+part '../track/state.dart';
+part '../track/event.dart';
 
 class TrackCubit extends Cubit<TrackState> {
   TrackCubit() : super(TrackState());
@@ -41,7 +41,7 @@ class TrackBloc extends Bloc<TrackEvent, TrackState> {
 class TrackCollectionBloc extends Bloc<TrackEvent, TrackCollectionState> {
   TrackCollectionState _state;
   TrackStorage _repo;
-  TrackCollectionBloc(TrackStorage repo, {TrackCollectionState? state})
+  TrackCollectionBloc(TrackStorage repo)
       : _repo = repo,
         _state = repo.getTrackCollection(),
         super(repo.getTrackCollection()) {

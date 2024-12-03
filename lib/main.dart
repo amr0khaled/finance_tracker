@@ -8,8 +8,11 @@ import 'package:finance_tracker/layout/drawer/drawer_item.dart';
 import 'package:finance_tracker/layout/nav_bar/nav_bar.dart';
 import 'package:finance_tracker/layout/nav_bar/nav_bar_item.dart';
 import 'package:finance_tracker/theme.dart';
+import 'package:finance_tracker/utils/categories/bloc.dart';
+import 'package:finance_tracker/utils/categories/storage.dart';
+import 'package:finance_tracker/utils/domain_layer/storage.dart';
 import 'package:finance_tracker/utils/domain_layer/track_storage.dart';
-import 'package:finance_tracker/utils/tracks/tracks_bloc.dart';
+import 'package:finance_tracker/utils/tracks/bloc.dart';
 import 'package:finance_tracker/views/accounts.dart';
 import 'package:finance_tracker/views/add_view.dart';
 import 'package:finance_tracker/views/charts.dart';
@@ -36,7 +39,7 @@ Future<void> main() async {
 
   // Initialinzing Local storage
   final instance = await SharedPreferences.getInstance();
-  final localStorage = TrackStorage(instance);
+  final localStorage = InternalStorage(instance);
   final mode = PlatformDispatcher.instance.platformBrightness;
 
   SystemChrome.setSystemUIOverlayStyle(mode == Brightness.light
@@ -52,45 +55,47 @@ Future<void> main() async {
           systemNavigationBarColor: darkColorScheme.surface,
           systemNavigationBarIconBrightness: Brightness.light,
         ));
-  print(json.decode('{"categories": [1, 2, 3, 4]}'));
-  // Add localStorage Repo to provider
-  runApp(RepositoryProvider.value(
-    value: localStorage,
-    child: BlocProvider(
-      create: (_) => TrackCollectionBloc(localStorage),
-      child: MultiBlocListener(
-        listeners: [
-          BlocListener<TrackCollectionBloc, TrackCollectionState>(
-              listenWhen: (previous, current) =>
-                  previous.status != current.status ||
-                  previous.data.length != current.data.length ||
-                  previous.name != current.name,
-              listener: (context, state) {
-                print('After listening ${state.status}');
-                if (state.status == TrackCreationStatus.failure) {
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar(context,
-                      title: 'Error in listener', onPressed: () {}));
-                }
-              })
+  //print(json.decode('{"categories": [1, 2, 3, 4]}'));  // Add localStorage Repo to provider
+  runApp(RepositoryProvider<InternalStorage>(
+      create: (_) => localStorage,
+      child: MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider(
+            create: (context) => CategoryStorage(
+                data: CategoriesState(data: ['A', 'B', 'C', "D"]),
+                plugin: RepositoryProvider.of<InternalStorage>(context)),
+          )
         ],
-        child: const MyApp(),
-      ),
-    ),
-  ));
+        child: MyApp(),
+      )
+      // BlocListener<TrackCollectionBloc, TrackCollectionState>(
+      //     listenWhen: (previous, current) =>
+      //         previous.status != current.status ||
+      //         previous.data.length != current.data.length ||
+      //         previous.name != current.name,
+      //     listener: (context, state) {
+      //       print('After listening ${state.status}');
+      //       if (state.status == TrackCreationStatus.failure) {
+      //         ScaffoldMessenger.of(context).showSnackBar(snackBar(context,
+      //             title: 'Error in listener', onPressed: () {}));
+      //       }
+      //     }),
+
+      ));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    context
-        .read<TrackCollectionBloc>()
-        .add(const TrackCollectionGetDataEvent());
-    Timer.periodic(const Duration(minutes: 10), (_) {
-      context
-          .read<TrackCollectionBloc>()
-          .add(const TrackCollectionPushDataEvent());
-    });
+    // context
+    //     .read<TrackCollectionBloc>()
+    //     .add(const TrackCollectionGetDataEvent());
+    // Timer.periodic(const Duration(minutes: 10), (_) {
+    //   context
+    //       .read<TrackCollectionBloc>()
+    //       .add(const TrackCollectionPushDataEvent());
+    // });
     TextStyle textStyle(double fontSize, {String? fontFamily}) {
       FontWeight weight = FontWeight.w400;
       if (fontSize < 8) weight = FontWeight.w100;
@@ -109,94 +114,102 @@ class MyApp extends StatelessWidget {
           fontWeight: weight);
     }
 
-    return MaterialApp(
-      title: 'Finance Tracker',
-      debugShowMaterialGrid: false,
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.light,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        useMaterial3: true,
-        colorScheme: lightColorScheme,
-        fontFamily: 'Poppins',
-        inputDecorationTheme: InputDecorationTheme(
-          hoverColor: Colors.red,
-          border: const UnderlineInputBorder(
-            borderSide: BorderSide(width: 2.0, color: Colors.black),
-          ),
-          errorBorder: UnderlineInputBorder(
-            borderSide: BorderSide(
-                width: 1.0, color: Theme.of(context).colorScheme.error),
-          ),
-          enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(width: 2.0, color: Colors.black),
-          ),
-        ),
-        textTheme: TextTheme(
-          titleLarge: textStyle(24),
-          titleMedium: textStyle(20),
-          titleSmall: textStyle(12),
-          headlineLarge: textStyle(28),
-          headlineMedium: textStyle(24),
-          headlineSmall: textStyle(20),
-          bodyLarge: textStyle(16),
-          bodyMedium: textStyle(12),
-          bodySmall: textStyle(8),
-          labelLarge: textStyle(18),
-          labelMedium: textStyle(16),
-          labelSmall: textStyle(12),
-          displayLarge: textStyle(32),
-          displayMedium: textStyle(24),
-          displaySmall: textStyle(16),
-        ),
-      ),
-      darkTheme: ThemeData(
-          brightness: Brightness.light,
-          useMaterial3: true,
-          inputDecorationTheme: InputDecorationTheme(
-            hoverColor: Colors.red,
-            border: const UnderlineInputBorder(
-              borderSide: BorderSide(width: 2.0, color: Colors.black),
+    return MultiBlocProvider(
+        providers: [
+          BlocProvider<CategoryBloc>(
+            create: (_) =>
+                CategoryBloc(RepositoryProvider.of<CategoryStorage>(context)),
+          )
+        ],
+        child: MaterialApp(
+          title: 'Finance Tracker',
+          debugShowMaterialGrid: false,
+          debugShowCheckedModeBanner: false,
+          themeMode: ThemeMode.light,
+          theme: ThemeData(
+            brightness: Brightness.light,
+            useMaterial3: true,
+            colorScheme: lightColorScheme,
+            fontFamily: 'Poppins',
+            inputDecorationTheme: InputDecorationTheme(
+              hoverColor: Colors.red,
+              border: const UnderlineInputBorder(
+                borderSide: BorderSide(width: 2.0, color: Colors.black),
+              ),
+              errorBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                    width: 1.0, color: Theme.of(context).colorScheme.error),
+              ),
+              enabledBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(width: 2.0, color: Colors.black),
+              ),
             ),
-            errorBorder: UnderlineInputBorder(
-              borderSide: BorderSide(
-                  width: 2.0, color: Theme.of(context).colorScheme.error),
-            ),
-            enabledBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(width: 2.0, color: Colors.black),
+            textTheme: TextTheme(
+              titleLarge: textStyle(24),
+              titleMedium: textStyle(20),
+              titleSmall: textStyle(12),
+              headlineLarge: textStyle(28),
+              headlineMedium: textStyle(24),
+              headlineSmall: textStyle(20),
+              bodyLarge: textStyle(16),
+              bodyMedium: textStyle(12),
+              bodySmall: textStyle(8),
+              labelLarge: textStyle(18),
+              labelMedium: textStyle(16),
+              labelSmall: textStyle(12),
+              displayLarge: textStyle(32),
+              displayMedium: textStyle(24),
+              displaySmall: textStyle(16),
             ),
           ),
-          textTheme: TextTheme(
-            titleLarge: textStyle(28),
-            titleMedium: textStyle(24),
-            titleSmall: textStyle(20),
-            headlineLarge: textStyle(28),
-            headlineMedium: textStyle(24),
-            headlineSmall: textStyle(20),
-            bodyLarge: textStyle(16),
-            bodyMedium: textStyle(12),
-            bodySmall: textStyle(8),
-            labelLarge: textStyle(18),
-            labelMedium: textStyle(16),
-            labelSmall: textStyle(12),
-            displayLarge: textStyle(32),
-            displayMedium: textStyle(24),
-            displaySmall: textStyle(16),
-          ),
-          appBarTheme: AppBarTheme(
-            systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarIconBrightness: Brightness.dark,
-              statusBarColor: Theme.of(context).colorScheme.surface,
-              systemNavigationBarColor: Theme.of(context).colorScheme.surface,
-              systemStatusBarContrastEnforced: true,
-            ),
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            foregroundColor: Theme.of(context).colorScheme.onSurface,
-          ),
-          colorScheme: darkColorScheme,
-          fontFamily: 'Poppins'),
-      home: const AppContainer(),
-    );
+          darkTheme: ThemeData(
+              brightness: Brightness.light,
+              useMaterial3: true,
+              inputDecorationTheme: InputDecorationTheme(
+                hoverColor: Colors.red,
+                border: const UnderlineInputBorder(
+                  borderSide: BorderSide(width: 2.0, color: Colors.black),
+                ),
+                errorBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(
+                      width: 2.0, color: Theme.of(context).colorScheme.error),
+                ),
+                enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(width: 2.0, color: Colors.black),
+                ),
+              ),
+              textTheme: TextTheme(
+                titleLarge: textStyle(28),
+                titleMedium: textStyle(24),
+                titleSmall: textStyle(20),
+                headlineLarge: textStyle(28),
+                headlineMedium: textStyle(24),
+                headlineSmall: textStyle(20),
+                bodyLarge: textStyle(16),
+                bodyMedium: textStyle(12),
+                bodySmall: textStyle(8),
+                labelLarge: textStyle(18),
+                labelMedium: textStyle(16),
+                labelSmall: textStyle(12),
+                displayLarge: textStyle(32),
+                displayMedium: textStyle(24),
+                displaySmall: textStyle(16),
+              ),
+              appBarTheme: AppBarTheme(
+                systemOverlayStyle: SystemUiOverlayStyle(
+                  statusBarIconBrightness: Brightness.dark,
+                  statusBarColor: Theme.of(context).colorScheme.surface,
+                  systemNavigationBarColor:
+                      Theme.of(context).colorScheme.surface,
+                  systemStatusBarContrastEnforced: true,
+                ),
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+              ),
+              colorScheme: darkColorScheme,
+              fontFamily: 'Poppins'),
+          home: const AppContainer(),
+        ));
   }
 }
 
@@ -380,8 +393,10 @@ class _AppContainerState extends State<AppContainer> {
             setState(() => index = i);
           },
           onActionPressed: () {
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (context) => const AddView()));
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => BlocProvider<CategoryBloc>(
+                    create: (context) => context.read<CategoryBloc>(),
+                    child: const AddView())));
           },
         ));
   }
