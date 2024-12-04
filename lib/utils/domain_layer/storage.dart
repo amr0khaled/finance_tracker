@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:finance_tracker/utils/event_handling/done.dart';
+import 'package:finance_tracker/utils/event_handling/error.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /*
@@ -22,17 +24,16 @@ abstract class InternalStorageAPI {
   Future<Map<String, dynamic>> loadStore(String name);
   Future<String> toJson(Map<String, dynamic> data);
   Future<Map<String, dynamic>> fromJson(String data);
-  Future<bool> editValue(String name, Map<String, dynamic> data);
-  Future<void> addValue(Map<String, dynamic> data);
+  Future<BlocEvent> editValue(String name, Map<String, dynamic> data);
+  Future<BlocEvent> addValue(Map<String, dynamic> data);
 }
 
 class InternalStorage extends InternalStorageAPI {
-  late final SharedPreferences _plugin;
+  late final SharedPreferencesWithCache _plugin;
   late Map<String, dynamic> _lastRemoved;
-  @override
   late List<Map<String, dynamic>> _data = [];
   static String kStorage = '__storage__';
-  InternalStorage(SharedPreferences plugin) : _plugin = plugin;
+  InternalStorage(SharedPreferencesWithCache plugin) : _plugin = plugin;
   List<Map<String, dynamic>> get data => _data;
 
   @override
@@ -57,42 +58,41 @@ class InternalStorage extends InternalStorageAPI {
         _data.add(storage);
       }
       final ob = _data.indexWhere((e) => e['name'] == name);
-      for (var data in _data) {
-        print(data['name']);
-      }
-      print('IndexWhere in loadStore $ob');
       return _data[ob];
     }
     return {'name': name, 'value': null};
   }
 
   @override
-  Future<void> saveStore() async {
-    List<String> savedData = [];
-    List<String> names = List<String>.from(_data.map((e) => e['name']));
-    names = names.toSet().toList();
-
-    for (var name in names) {
-      print('LOOPING: $data');
-      final encoded = await toJson(_data.lastWhere((e) => e['name'] == name));
-      savedData.add(encoded);
+  Future<BlocEvent> saveStore() async {
+    try {
+      List<String> savedData = [];
+      List<String> names = List<String>.from(_data.map((e) => e['name']));
+      names = names.toSet().toList();
+      for (var name in names) {
+        final encoded = await toJson(_data.lastWhere((e) => e['name'] == name));
+        savedData.add(encoded);
+      }
+      _plugin.setStringList(kStorage, savedData);
+      return const BlocDone('Data is saved');
+    } catch (e, stack) {
+      return BlocError('FAILURE: Data is not saved', err: e, stack: stack);
     }
-    _plugin.setStringList(kStorage, savedData);
   }
 
   /// Change Whole Data
   /// if it is not exists that mean that it is not stored yet
   @override
-  Future<bool> editValue(String name, Map<String, dynamic> newData) async {
+  Future<BlocEvent> editValue(String name, Map<String, dynamic> newData) async {
     var status = _data.indexWhere((e) => e['name'] == name);
-    if (status != -1) {
-      _lastRemoved = _data.removeAt(status);
+    try {
       _data.add(newData);
       _data = _data.toSet().toList();
-      return true;
-    } else {
-      print('IS Already removed in EDIT');
-      return false;
+      saveStore();
+      return BlocDone('SUCCESS: Edited $name repo');
+    } catch (e, stack) {
+      return BlocError('FAILURE: $name repo is not found',
+          err: e, stack: stack);
     }
   }
 
@@ -115,9 +115,14 @@ class InternalStorage extends InternalStorageAPI {
   ///
 
   @override
-  Future<void> addValue(Map<String, dynamic> data) async {
-    _data.add(data);
-    _data = _data.toSet().toList();
-    print('ADDED data in Add Value');
+  Future<BlocEvent> addValue(Map<String, dynamic> data) async {
+    try {
+      _data.add(data);
+      _data = _data.toSet().toList();
+      return const BlocDone('SUCCESS: Added data to InternalStorage');
+    } catch (e, stack) {
+      return BlocError('FAILURE: Adding $data in InternalStorage',
+          err: e, stack: stack);
+    }
   }
 }

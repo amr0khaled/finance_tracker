@@ -16,6 +16,7 @@ class CategoryButton<T> extends StatefulWidget {
     this.onChange,
     this.lastButton = false,
     this.lastLabel,
+    this.onLongPress,
     this.onLastButton,
   });
   final List<CategorySegment<T>> segments;
@@ -24,7 +25,8 @@ class CategoryButton<T> extends StatefulWidget {
   String? lastLabel;
 
   void Function(Set<T>)? onChange;
-  Future<T> Function()? onLastButton;
+  void Function()? onLastButton;
+  void Function(T)? onLongPress;
 
   @override
   State<CategoryButton<T>> createState() => _CategoryButtonState<T>();
@@ -63,70 +65,77 @@ class _CategoryButtonState<T> extends State<CategoryButton<T>> {
         for (var i = 0; i < _segments.length; i++)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
-            child: TextButton.icon(
-              style: OutlinedButton.styleFrom(
-                  backgroundColor: _segments[i] != _segments.last
-                      ? _selected.any((e) => e == _segments[i].value)
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : Colors.transparent
-                      : Theme.of(context).colorScheme.secondaryContainer,
-                  foregroundColor: _segments[i] != _segments.last
-                      ? _selected.any((e) => e == _segments[i].value)
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : Colors.black54
-                      : Theme.of(context).colorScheme.onSecondaryContainer,
-                  side: BorderSide(
-                    width: 1.2,
-                    color: _segments[i] != _segments.last
+            child: GestureDetector(
+              onLongPress: _segments[i] != _segments.last
+                  ? () {
+                      if (widget.onLongPress != null) {
+                        widget.onLongPress!(_segments[i].value);
+                      }
+                    }
+                  : () {},
+              child: TextButton.icon(
+                style: OutlinedButton.styleFrom(
+                    backgroundColor: _segments[i] != _segments.last
+                        ? _selected.any((e) => e == _segments[i].value)
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Colors.transparent
+                        : Theme.of(context).colorScheme.secondaryContainer,
+                    foregroundColor: _segments[i] != _segments.last
                         ? _selected.any((e) => e == _segments[i].value)
                             ? Theme.of(context).colorScheme.onPrimaryContainer
                             : Colors.black54
                         : Theme.of(context).colorScheme.onSecondaryContainer,
-                  ),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(64))),
-              onPressed: _segments[i] == _segments.last && widget.lastButton
-                  ? () async {
-                      if (widget.onLastButton != null && widget.lastButton) {
-                        final newCategory = await widget.onLastButton!();
-                        // setState(() => _endbuttonAdded = false);
-                        // _segments.remove(_segments.last);
-                        // _segments.add(CategorySegment(value: newCategory));
-                      }
-                    }
-                  : () => setState(() {
-                        if (_selected
-                                .toList()
-                                .indexWhere((e) => e == _segments[i].value) ==
-                            -1) {
-                          _selected.add(_segments[i].value);
-                        } else {
-                          _selected.remove(_segments[i].value);
-                        }
-                        if (widget.onChange != null) {
-                          widget.onChange!(_selected);
-                        }
-                      }),
-              label: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnimatedSize(
-                      duration: Durations.short3,
-                      child: Icon(
-                        UniconsSolid.check,
-                        size: _segments[i] != _segments.last &&
-                                _selected.any((e) => e == _segments[i].value)
-                            ? null
-                            : 0,
-                      ),
+                    side: BorderSide(
+                      width: 1.2,
+                      color: _segments[i] != _segments.last
+                          ? _selected.any((e) => e == _segments[i].value)
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Colors.black54
+                          : Theme.of(context).colorScheme.onSecondaryContainer,
                     ),
-                    _segments[i].label ?? Text(_segments[i].value.toString()),
-                  ],
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(64))),
+                onPressed: _segments[i] == _segments.last && widget.lastButton
+                    ? () async {
+                        if (widget.onLastButton != null && widget.lastButton) {
+                          widget.onLastButton!();
+                        }
+                      }
+                    : () => setState(() {
+                          if (_selected
+                                  .toList()
+                                  .indexWhere((e) => e == _segments[i].value) ==
+                              -1) {
+                            _selected.add(_segments[i].value);
+                          } else {
+                            _selected.remove(_segments[i].value);
+                          }
+                          if (widget.onChange != null) {
+                            widget.onChange!(_selected);
+                          }
+                        }),
+                label: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 1, horizontal: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedSize(
+                        duration: Durations.short3,
+                        child: Icon(
+                          UniconsSolid.check,
+                          size: _segments[i] != _segments.last &&
+                                  _selected.any((e) => e == _segments[i].value)
+                              ? null
+                              : 0,
+                        ),
+                      ),
+                      _segments[i].label ?? Text(_segments[i].value.toString()),
+                    ],
+                  ),
                 ),
+                icon: _segments[i].icon,
               ),
-              icon: _segments[i].icon,
             ),
           )
       ],

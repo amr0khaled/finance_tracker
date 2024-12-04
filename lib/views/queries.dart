@@ -89,24 +89,30 @@ class _QueriesViewState extends State<QueriesView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(
-                visualDensity: const VisualDensity(
-                  horizontal: -2,
-                  vertical: VisualDensity.minimumDensity,
-                ),
-                value: done,
-                splashRadius: 14,
-                side: const BorderSide(
-                  width: 1,
-                ),
-                onChanged: changeBool,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4)),
-              ),
-              Flexible(
-                child: Text(
-                  title,
-                  style: const TextStyle(fontSize: 18),
+              Expanded(
+                child: Row(
+                  children: [
+                    Checkbox(
+                      visualDensity: const VisualDensity(
+                        horizontal: -2,
+                        vertical: VisualDensity.minimumDensity,
+                      ),
+                      value: done,
+                      splashRadius: 14,
+                      side: const BorderSide(
+                        width: 1,
+                      ),
+                      onChanged: changeBool,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4)),
+                    ),
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (amount != 0)

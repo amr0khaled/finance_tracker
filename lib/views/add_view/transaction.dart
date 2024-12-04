@@ -1,14 +1,13 @@
 import 'package:finance_tracker/components/card.dart';
 import 'package:finance_tracker/components/popup_transaction.dart';
-import 'package:finance_tracker/components/searchbar.dart';
 import 'package:finance_tracker/components/snack_bar.dart';
 import 'package:finance_tracker/layout/add_view/add_action_buttons.dart';
 import 'package:finance_tracker/layout/add_view/add_category_button.dart';
-import 'package:finance_tracker/main.dart';
 import 'package:finance_tracker/utils/categories/bloc.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:finance_tracker/utils/event_handling/error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
 import 'package:flutter_native_contact_picker/model/contact.dart';
 
@@ -23,40 +22,116 @@ class _AddTransactionState extends State<AddTransaction> {
   String whatTransaction = '';
   late Contact _contact;
   FlutterNativeContactPicker contactPicker = FlutterNativeContactPicker();
-  late List<String> categories = [
-    'Home',
-    'Personal',
-    'Vacation',
-    'Tuition',
-    'Photography',
-    'Study',
-    'Work',
-    'Programming',
-    'Health',
-    'Clothes',
-    'Pet',
-  ];
-  Set<String> _selectedCategories = {};
-  String getNewCategory(BuildContext context) {
+  final Set<String> _selectedCategories = {};
+  void removeCategory(BuildContext context, String category) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          Size screen = MediaQuery.sizeOf(context);
+          return PopupDialog(
+            constraints: BoxConstraints(
+                maxWidth: screen.width * 0.7,
+                minWidth: 0,
+                maxHeight: screen.height * 0.25,
+                minHeight: 0),
+            title: 'Remove Category',
+            child: Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Markdown(
+                      data: 'You really want to remove **$category**?',
+                      padding: const EdgeInsets.all(8),
+                      styleSheet: MarkdownStyleSheet(
+                          textAlign: WrapAlignment.start,
+                          pPadding: const EdgeInsets.all(0),
+                          p: const TextStyle(fontSize: 16),
+                          strong: const TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        for (var i = 0; i < 2; i++)
+                          ElevatedButton(
+                              style: TextButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16)),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                fixedSize: Size(screen.width * 0.27, 40),
+                                backgroundColor: i == 0
+                                    ? Theme.of(context).colorScheme.error
+                                    : Theme.of(context).colorScheme.primary,
+                                foregroundColor: i == 0
+                                    ? Color.alphaBlend(Colors.white70,
+                                        Theme.of(context).colorScheme.onError)
+                                    : Theme.of(context).colorScheme.onPrimary,
+                              ),
+                              onPressed: i == 0
+                                  ? () {
+                                      Navigator.of(context).pop();
+                                    }
+                                  : () {
+                                      final bloc =
+                                          BlocProvider.of<CategoryBloc>(
+                                              context);
+                                      if (!bloc.isClosed) {
+                                        bloc.add(DeleteCategoryEvent(category));
+                                        Navigator.of(context).pop();
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(snackBar(context,
+                                                title: '$category has removed',
+                                                onPressed: () {
+                                          bloc.add(const UndoCategoriesEvent());
+                                        }));
+                                      } else {
+                                        print('BloC is closed');
+                                      }
+                                    },
+                              child: Text(i == 0 ? 'No' : 'Yes',
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w500))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  void newCategory(BuildContext context) {
     showDialog(
         context: context,
         builder: (context) => PopupInputTransaction(
               title: 'Add new category',
-              onDone: (e) {
-                final bloc = context.read<CategoryBloc>();
-                print('Add');
-                bloc.add(AddCategoryEvent(e));
-                bloc.add(const SaveCategoriesEvent());
-                bloc.add(const LoadCategoriesEvent());
+              onDone: (e) async {
+                final bloc = BlocProvider.of<CategoryBloc>(context);
+                if (!bloc.isClosed) {
+                  bloc.add(AddCategoryEvent(e));
+                  bloc.add(const UndoCategoriesEvent());
+                  Navigator.of(context).pop();
+                } else {
+                  print('BloC is Closed');
+                }
               },
             ));
-    return '';
   }
+
+  final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    final categoryBloc = context.read<CategoryBloc>();
     return Scaffold(
+        key: _globalKey,
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24)
               .add(const EdgeInsets.only(top: 48, bottom: 20)),
@@ -175,36 +250,64 @@ class _AddTransactionState extends State<AddTransaction> {
                       Padding(
                         padding: const EdgeInsets.only(left: 8.0, top: 8.0),
                         child: Center(
-                          child: Wrap(
-                            alignment: WrapAlignment.center,
-                            children: [
-                              BlocBuilder<CategoryBloc, CategoriesState>(
-                                  buildWhen: (p, n) =>
-                                      p.data.length != n.data.length ||
-                                      p.status != n.status,
-                                  builder: (context, CategoriesState state) =>
-                                      CategoryButton(
-                                          lastButton: true,
-                                          lastLabel: 'New',
-                                          onLastButton: () async {
-                                            getNewCategory(context);
-                                          },
-                                          onChange: (e) {
-                                            print(e);
-                                          },
-                                          segments: [
-                                            for (var i in state.data)
-                                              CategorySegment(
-                                                  label: Text(
-                                                    i,
-                                                    style:
-                                                        TextStyle(fontSize: 16),
-                                                  ),
-                                                  value: i)
-                                          ],
-                                          selected: _selectedCategories))
-                            ],
-                          ),
+                          child: BlocConsumer<CategoryBloc, CategoriesState>(
+                              listener: (context, state) {
+                                const errorStatus = CategoryStatus.error;
+                                if (state.status == errorStatus ||
+                                    state.event is BlocError) {
+                                  BlocError errorEvent =
+                                      state.event as BlocError;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      snackBar(context,
+                                          title: errorEvent.message));
+                                  if (errorEvent.err != null) {
+                                    print("ERROR: ${errorEvent.err}");
+                                    print("STACKTRACE: ${errorEvent.stack}");
+                                  }
+                                }
+                                print(
+                                    'In Listener ${state.event?.message}, data ${state.data}');
+                              },
+                              listenWhen: (p, n) =>
+                                  p.data.length != n.data.length ||
+                                  p.status != n.status ||
+                                  n.event is BlocError ||
+                                  p.event is BlocError,
+                              builder: (context, CategoriesState state) {
+                                if (state.data.isEmpty) {
+                                  BlocProvider.of<CategoryBloc>(context)
+                                      .add(const LoadCategoriesEvent());
+                                }
+                                var data = state.data;
+                                return CategoryButton(
+                                    key: UniqueKey(),
+                                    lastButton: true,
+                                    lastLabel: 'New',
+                                    onLongPress: (String e) {
+                                      setState(() {
+                                        removeCategory(context, e);
+                                      });
+                                    },
+                                    onLastButton: () {
+                                      setState(() {
+                                        newCategory(context);
+                                      });
+                                    },
+                                    onChange: (e) {
+                                      print(e);
+                                    },
+                                    segments: [
+                                      for (var i in data)
+                                        CategorySegment(
+                                            label: Text(
+                                              i,
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                            ),
+                                            value: i)
+                                    ],
+                                    selected: _selectedCategories);
+                              }),
                         ),
                       )
                     ],

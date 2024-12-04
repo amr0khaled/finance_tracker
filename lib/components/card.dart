@@ -9,28 +9,29 @@ SnackBar snackBar(BuildContext context,
     {String? title, Function()? onPressed}) {
   Color text = Theme.of(context).colorScheme.surface;
   return SnackBar(
-    content: Text(
-      title ?? 'TEST',
-      style: TextStyle(color: text, fontSize: 14),
+    content: Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Text(
+        title ?? 'TEST',
+        style:
+            TextStyle(color: text, fontSize: 14, fontWeight: FontWeight.w500),
+      ),
     ),
     duration: const Duration(seconds: 5),
     showCloseIcon: true,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     margin: const EdgeInsets.fromLTRB(40, 0, 40, 10),
     behavior: SnackBarBehavior.floating,
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
     backgroundColor: Theme.of(context).colorScheme.onSurface,
     closeIconColor: text,
     dismissDirection: DismissDirection.horizontal,
     elevation: 6,
     action: SnackBarAction(
       label: 'Undo',
-      textColor: text,
-      onPressed: onPressed ??
-          () {
-            BlocProvider.of<TrackCollectionBloc>(context)
-                .add(const TrackCollectionUndoTrackEvent());
-          },
+      textColor: Theme.of(context).colorScheme.onSurface,
+      backgroundColor: text,
+      onPressed: onPressed ?? () {},
     ),
   );
 }

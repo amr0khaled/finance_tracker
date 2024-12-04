@@ -6,32 +6,46 @@ class CategoryStateValue {}
 
 class CategoriesState extends CategoryStateValue {
   late final List<CategoryData> _data;
+  late BlocEvent? event;
   CategoriesState(
-      {required List<CategoryData> data, this.status = CategoryStatus.initial})
+      {required List<CategoryData> data,
+      this.status = CategoryStatus.initial,
+      this.event})
       : _data = data;
   List<CategoryData> get data => _data;
   CategoryStatus? status;
-  Future<bool> add(CategoryData value) async {
+  Future<BlocEvent> add(CategoryData value) async {
     int exists = _data.indexOf(value);
     if (exists == -1) {
       _data.add(value);
-      return true;
+      return BlocDone('$value is added');
     } else {
-      return false;
+      return BlocError('$value is already exists');
     }
   }
 
-  Future<bool> remove(CategoryData value) async {
+  Future<BlocEvent> remove(CategoryData value) async {
     int exists = _data.indexOf(value);
     if (exists != -1) {
       _data.remove(value);
-      return true;
+      return BlocDone('$value is removed');
     } else {
-      return false;
+      return BlocError('$value is not found');
     }
   }
 
-  CategoriesState copyWith({List<CategoryData>? data, CategoryStatus? status}) {
-    return CategoriesState(data: data ?? _data, status: status ?? this.status);
+  Future<BlocEvent> insert(int i, CategoryData value) async {
+    if (value.isNotEmpty) {
+      _data.insert(i, value);
+      return BlocDone('SUCCESS: $value inserted at $i');
+    } else {
+      return BlocError('FAILURE: Inserting $value at $i');
+    }
+  }
+
+  CategoriesState copyWith(
+      {List<CategoryData>? data, CategoryStatus? status, BlocEvent? event}) {
+    return CategoriesState(
+        data: data ?? _data, status: status ?? this.status, event: event);
   }
 }

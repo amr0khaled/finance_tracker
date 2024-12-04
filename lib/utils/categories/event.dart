@@ -35,3 +35,10 @@ class LoadCategoriesEvent extends CategoriesEvent {
   @override
   get props => [];
 }
+
+class UndoCategoriesEvent extends CategoriesEvent {
+  const UndoCategoriesEvent();
+
+  @override
+  get props => [];
+}

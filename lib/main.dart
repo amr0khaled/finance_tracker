@@ -25,6 +25,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unicons/unicons.dart';
@@ -39,7 +40,11 @@ Future<void> main() async {
 
   // Initialinzing Local storage
   final instance = await SharedPreferences.getInstance();
-  final localStorage = InternalStorage(instance);
+  final cacheInstance = await getApplicationCacheDirectory().then((e) => e);
+  final cache = await SharedPreferencesWithCache.create(
+      cacheOptions: const SharedPreferencesWithCacheOptions());
+  final File temp = File(cacheInstance.path + '/storage.json');
+  final localStorage = InternalStorage(cache);
   final mode = PlatformDispatcher.instance.platformBrightness;
 
   SystemChrome.setSystemUIOverlayStyle(mode == Brightness.light
@@ -62,11 +67,25 @@ Future<void> main() async {
         providers: [
           RepositoryProvider(
             create: (context) => CategoryStorage(
-                data: CategoriesState(data: ['A', 'B', 'C', "D"]),
+                data: CategoriesState(data: []
+                    // [
+                    //   'Home',
+                    //   'Personal',
+                    //   'Vacation',
+                    //   'Tuition',
+                    //   'Photography',
+                    //   'Study',
+                    //   'Work',
+                    //   'Programming',
+                    //   'Health',
+                    //   'Clothes',
+                    //   'Pet',
+                    // ]
+                    ),
                 plugin: RepositoryProvider.of<InternalStorage>(context)),
           )
         ],
-        child: MyApp(),
+        child: const MyApp(),
       )
       // BlocListener<TrackCollectionBloc, TrackCollectionState>(
       //     listenWhen: (previous, current) =>

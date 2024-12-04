@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:finance_tracker/utils/categories/bloc.dart';
 import 'package:finance_tracker/utils/domain_layer/storage.dart';
+import 'package:finance_tracker/utils/event_handling/done.dart';
+import 'package:finance_tracker/utils/event_handling/error.dart';
 
 typedef CategoryData = String;
 
@@ -13,25 +15,43 @@ class CategoryStorage {
     _data = data ?? CategoriesState(data: []);
     _plugin = plugin;
   }
+
+  ///
+  /// {index: 0, value: 'Home'}
+  ///
+  late Map<String, dynamic> _lastRemoved = {'index': -1, 'value': null};
   CategoriesState get data => _data;
   String get id => _id;
-  Future<bool> add(CategoryData value) async {
+  Future<BlocEvent> add(CategoryData value) async {
     var exists = _data.data.indexOf(value);
     if (exists == -1) {
       _data.add(value);
-      return true;
+      saveData();
+      return BlocDone('SUCCESS: $value is added');
     } else {
-      return false;
+      return BlocError('$value is already exists');
     }
   }
 
-  Future<bool> remove(CategoryData value) async {
+  Future<BlocEvent> remove(CategoryData value) async {
     var exists = _data.data.indexOf(value);
     if (exists != -1) {
       _data.remove(value);
-      return true;
+      _lastRemoved = {'index': exists, 'value': value};
+      saveData();
+      return BlocDone('SUCCESS: $value is removed');
     } else {
-      return false;
+      return BlocError('$value is not found');
+    }
+  }
+
+  Future<BlocEvent> undo() async {
+    if (_lastRemoved['value'] != null) {
+      _data.insert(_lastRemoved['index'], _lastRemoved['value']);
+      saveData();
+      return BlocEvent('SUCCESS: ${_lastRemoved['value']} has return');
+    } else {
+      return BlocError('FAILURE: Nothing have been removed');
     }
   }
 
@@ -49,25 +69,28 @@ class CategoryStorage {
     saveData();
   }
 
-  Future<void> saveData() async {
+  Future<BlocEvent> saveData() async {
     var status = await _plugin.editValue(_id, toMap());
-    print("STATUS in saveData $status");
-    if (!status) {
-      print('ADD VALUE in CategoryStorage');
-      print('DATA BEFORE: ${_plugin.data}');
+    if (status is BlocError) {
       _plugin.addValue(toMap());
-      print('ADD VALUE in CategoryStorage');
-      print('DATA AFTER: ${_plugin.data}');
     }
-    await _plugin.saveStore();
+    return await _plugin.saveStore();
   }
 
-  Future<void> loadData() async {
+  Future<CategoriesState> loadData() async {
     final ob = await _plugin.loadStore(_id);
+    late CategoriesState newState;
     if (ob['value'] != null) {
-      await setData(_data.copyWith(data: ob['value']));
+      newState = _data.copyWith(
+          data: List<String>.from(ob['value']),
+          event: const BlocDone('Data is loaded'));
+
+      await setData(newState);
     } else {
-      Error();
+      newState = _data
+          .copyWith(data: <String>[], event: BlocError('Data is not found'));
+      await setData(newState);
     }
+    return newState;
   }
 }

@@ -24,6 +24,10 @@ class _NavBarState extends State<NavBar> {
   int _innerIndex = 0;
   @override
   Widget build(BuildContext context) {
+    List<List<String>> itemKeys = [
+      ['Queries', 'Accounts'],
+      ['Charts', 'Settings']
+    ];
     double gapSize = 90;
     double navGroupWidth = (MediaQuery.of(context).size.width - gapSize) / 2;
     return SizedBox(
@@ -49,6 +53,7 @@ class _NavBarState extends State<NavBar> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
+                            key: Key(itemKeys[i][j]),
                             style: ButtonStyle(
                                 shape: WidgetStatePropertyAll(
                                     RoundedRectangleBorder(
