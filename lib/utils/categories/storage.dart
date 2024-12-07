@@ -23,35 +23,64 @@ class CategoryStorage {
   CategoriesState get data => _data;
   String get id => _id;
   Future<BlocEvent> add(CategoryData value) async {
-    var exists = _data.data.indexOf(value);
-    if (exists == -1) {
-      _data.add(value);
-      saveData();
-      return BlocDone('SUCCESS: $value is added');
-    } else {
-      return BlocError('$value is already exists');
+    late BlocEvent event;
+    late BlocEvent saveEvent;
+    try {
+      event = await _data.add(value);
+      if (event is BlocError) {
+        throw Error();
+      }
+      saveEvent = await saveData();
+      if (saveEvent is BlocError) {
+        throw Error();
+      }
+      return event;
+    } catch (e, s) {
+      if (event is BlocError) {
+        return BlocError(event.message, err: e, stack: s);
+      }
+      return BlocError(saveEvent.message, err: e, stack: s);
     }
   }
 
   Future<BlocEvent> remove(CategoryData value) async {
-    var exists = _data.data.indexOf(value);
-    if (exists != -1) {
-      _data.remove(value);
+    late BlocEvent event;
+    late BlocEvent saveEvent;
+    try {
+      int exists = await _data.indexOf(value);
+      event = await _data.remove(value);
+      if (event is BlocError) {
+        throw Error();
+      }
       _lastRemoved = {'index': exists, 'value': value};
-      saveData();
-      return BlocDone('SUCCESS: $value is removed');
-    } else {
-      return BlocError('$value is not found');
+      saveEvent = await saveData();
+      if (saveEvent is BlocError) {
+        throw Error();
+      }
+      return event;
+    } catch (e, s) {
+      if (event is BlocError) {
+        return BlocError(event.message, err: e, stack: s);
+      }
+      return BlocError(saveEvent.message, err: e, stack: s);
     }
   }
 
   Future<BlocEvent> undo() async {
-    if (_lastRemoved['value'] != null) {
-      _data.insert(_lastRemoved['index'], _lastRemoved['value']);
-      saveData();
-      return BlocEvent('SUCCESS: ${_lastRemoved['value']} has return');
-    } else {
-      return BlocError('FAILURE: Nothing have been removed');
+    late BlocEvent event;
+    try {
+      if (_lastRemoved['value'] != null) {
+        _data.insert(_lastRemoved['index'], _lastRemoved['value']);
+        event = await saveData();
+        if (event is BlocError) {
+          throw Error();
+        }
+        return BlocEvent('SUCCESS: ${_lastRemoved['value']} has return');
+      } else {
+        return BlocError('FAILURE: Nothing have been removed');
+      }
+    } catch (e, s) {
+      return BlocError(event.message, err: e, stack: s);
     }
   }
 
@@ -66,10 +95,11 @@ class CategoryStorage {
 
   Future<void> setData(CategoriesState newData) async {
     _data = newData;
-    saveData();
+    await saveData();
   }
 
   Future<BlocEvent> saveData() async {
+    print(toMap());
     var status = await _plugin.editValue(_id, toMap());
     if (status is BlocError) {
       _plugin.addValue(toMap());

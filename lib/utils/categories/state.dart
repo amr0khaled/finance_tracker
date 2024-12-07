@@ -13,6 +13,7 @@ class CategoriesState extends CategoryStateValue {
       this.event})
       : _data = data;
   List<CategoryData> get data => _data;
+  List<CategoryData> getData() => _data;
   CategoryStatus? status;
   Future<BlocEvent> add(CategoryData value) async {
     int exists = _data.indexOf(value);
@@ -22,6 +23,10 @@ class CategoriesState extends CategoryStateValue {
     } else {
       return BlocError('$value is already exists');
     }
+  }
+
+  Future<int> indexOf(CategoryData value) async {
+    return _data.indexOf(value);
   }
 
   Future<BlocEvent> remove(CategoryData value) async {

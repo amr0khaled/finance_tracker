@@ -84,8 +84,9 @@ class InternalStorage extends InternalStorageAPI {
   /// if it is not exists that mean that it is not stored yet
   @override
   Future<BlocEvent> editValue(String name, Map<String, dynamic> newData) async {
-    var status = _data.indexWhere((e) => e['name'] == name);
+    var i = _data.indexWhere((e) => e['name'] == name);
     try {
+      _data.removeAt(i);
       _data.add(newData);
       _data = _data.toSet().toList();
       saveStore();

@@ -2,7 +2,6 @@ import 'package:finance_tracker/utils/categories/storage.dart';
 import 'package:equatable/equatable.dart';
 import 'package:finance_tracker/utils/event_handling/done.dart';
 import 'package:finance_tracker/utils/event_handling/error.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'state.dart';
@@ -73,25 +72,27 @@ class CategoryBloc extends Bloc<CategoriesEvent, CategoriesState> {
     });
     // Load Category
     on<LoadCategoriesEvent>((ev, emit) async {
-      late BlocError event = BlocError('');
+      late BlocError event;
       try {
         emit(_repo.copyWith(status: CategoryStatus.progress));
-        print(' ___________--_---_--__--__----_-_-------____---_-_-_----');
         final newState = await _plugin.loadData();
         if (newState.event is BlocError) {
           event = newState.event as BlocError;
           throw Error();
         }
-        emit(_repo.copyWith(
-            data: newState.data,
-            status: CategoryStatus.done,
-            event: newState.event));
+        if (newState.data.isEmpty && newState.event is BlocDone) {
+          emit(_repo.copyWith(
+              data: newState.data,
+              status: CategoryStatus.done,
+              event: newState.event));
+        } else {
+          emit(_repo.copyWith(
+              data: newState.data, status: CategoryStatus.initial));
+        }
       } catch (e, stack) {
-        print('ERRORR');
         emit(_repo.copyWith(
             status: CategoryStatus.error,
-            event: BlocError('Err in loading categories data',
-                err: e, stack: stack)));
+            event: BlocError(event.message, err: e, stack: stack)));
       }
     });
     // Save Category
@@ -104,7 +105,7 @@ class CategoryBloc extends Bloc<CategoriesEvent, CategoriesState> {
           event = status;
           throw Error();
         }
-        emit(_repo.copyWith(status: CategoryStatus.done));
+        emit(_repo.copyWith(event: event, status: CategoryStatus.done));
       } catch (e, stack) {
         emit(_repo.copyWith(
             status: CategoryStatus.error,

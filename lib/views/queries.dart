@@ -1,7 +1,10 @@
 import 'dart:convert';
 
 import 'package:finance_tracker/components/popup_transaction.dart';
+import 'package:finance_tracker/utils/categories/storage.dart';
+import 'package:finance_tracker/utils/transaction/bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SubTask {
   SubTask({required this.title, this.value});
@@ -66,7 +69,10 @@ class _QueriesViewState extends State<QueriesView> {
           }
         }, true),
         // _TodoSection()
-        RecentTrans()
+
+        BlocProvider<TransactionsBloc>.value(
+            value: BlocProvider.of<TransactionsBloc>(context),
+            child: const RecentTrans())
       ],
     ));
   }
@@ -217,40 +223,46 @@ class _RecentTransState extends State<RecentTrans> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 24),
-            child: Text(
-              'Recent Transactions',
-              style: TextStyle(
-                  fontSize: 30,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w400),
-            ),
+      child: BlocBuilder<TransactionsBloc, Transactions>(
+          bloc: BlocProvider.of<TransactionsBloc>(context),
+          builder: (context, state) {
+            return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 24),
+                    child: Text(
+                      'Recent Transactions',
+                      style: TextStyle(
+                          fontSize: 30,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w400),
+                    ),
+                  ),
+                  for (var trans in state.data)
+                    _buildTransactionItem(context, trans.title, trans.amount,
+                        date: trans.date,
+                        categories: trans.categories,
+                        description: trans.desc,
+                        lastItem: trans == state.data.last)
+                ]);
+          }
+          // _buildTransactionItem(
+          //   context,
+          //   'Salary',
+          //   4000,
+          //   description: "Salary of the month",
+          //   lastItem: false,
+          // ),
           ),
-          _buildTransactionItem(
-            context,
-            'Salary',
-            4000,
-            description: "Salary of the month",
-            lastItem: false,
-          ),
-          _buildTransactionItem(
-            context,
-            'Food',
-            -50,
-            description: "Some snacks",
-            lastItem: true,
-          )
-        ],
-      ),
     );
   }
 
   Widget _buildTransactionItem(BuildContext context, String title, int amount,
-      {bool lastItem = false, String? description}) {
+      {bool lastItem = false,
+      String? description,
+      required String date,
+      required List<CategoryData> categories}) {
     Size screen = MediaQuery.sizeOf(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 0),

@@ -13,6 +13,8 @@ import 'package:finance_tracker/utils/categories/storage.dart';
 import 'package:finance_tracker/utils/domain_layer/storage.dart';
 import 'package:finance_tracker/utils/domain_layer/track_storage.dart';
 import 'package:finance_tracker/utils/tracks/bloc.dart';
+import 'package:finance_tracker/utils/transaction/bloc.dart';
+import 'package:finance_tracker/utils/transaction/storage.dart';
 import 'package:finance_tracker/views/accounts.dart';
 import 'package:finance_tracker/views/add_view.dart';
 import 'package:finance_tracker/views/charts.dart';
@@ -67,21 +69,10 @@ Future<void> main() async {
         providers: [
           RepositoryProvider(
             create: (context) => CategoryStorage(
-                data: CategoriesState(data: []
-                    // [
-                    //   'Home',
-                    //   'Personal',
-                    //   'Vacation',
-                    //   'Tuition',
-                    //   'Photography',
-                    //   'Study',
-                    //   'Work',
-                    //   'Programming',
-                    //   'Health',
-                    //   'Clothes',
-                    //   'Pet',
-                    // ]
-                    ),
+                plugin: RepositoryProvider.of<InternalStorage>(context)),
+          ),
+          RepositoryProvider(
+            create: (context) => TransactionsStorage(
                 plugin: RepositoryProvider.of<InternalStorage>(context)),
           )
         ],
@@ -138,6 +129,10 @@ class MyApp extends StatelessWidget {
           BlocProvider<CategoryBloc>(
             create: (_) =>
                 CategoryBloc(RepositoryProvider.of<CategoryStorage>(context)),
+          ),
+          BlocProvider<TransactionsBloc>(
+            create: (_) => TransactionsBloc(
+                RepositoryProvider.of<TransactionsStorage>(context)),
           )
         ],
         child: MaterialApp(
@@ -284,10 +279,16 @@ class _AppContainerState extends State<AppContainer> {
   @override
   Widget build(BuildContext context) {
     List<Widget> views = [
-      ViewBootStrap(QueriesView()),
-      ViewBootStrap(AccountsView()),
-      ViewBootStrap(ChartsView()),
-      ViewBootStrap(SettingsView()),
+      ViewBootStrap(
+        MultiBlocProvider(providers: [
+          BlocProvider(
+            create: (context) => BlocProvider.of<TransactionsBloc>(context),
+          ),
+        ], child: const QueriesView()),
+      ),
+      const ViewBootStrap(AccountsView()),
+      const ViewBootStrap(ChartsView()),
+      const ViewBootStrap(SettingsView()),
     ];
     List<Icon> sideIcons = [
       Icon(
@@ -413,9 +414,15 @@ class _AppContainerState extends State<AppContainer> {
           },
           onActionPressed: () {
             Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => BlocProvider<CategoryBloc>(
-                    create: (context) => context.read<CategoryBloc>(),
-                    child: const AddView())));
+              builder: (context) => MultiBlocProvider(providers: [
+                BlocProvider<CategoryBloc>.value(
+                  value: BlocProvider.of<CategoryBloc>(context),
+                ),
+                BlocProvider<TransactionsBloc>.value(
+                  value: BlocProvider.of<TransactionsBloc>(context),
+                ),
+              ], child: const AddView()),
+            ));
           },
         ));
   }

@@ -2,9 +2,11 @@
 ## UI
 ### Transaction
 - [x] Implement Categories Bloc
-- [ ] Add Date Picker for transaction
-- [ ] Handle contact picker and it's Tile view
+- [x] Add Date Picker for transaction
+- [x] Create Transactions Bloc
+- [x] Create Transactions Storage
 - [ ] Implement Transactions Bloc
+- [ ] Handle contact picker and it's Tile view
 - [ ] Handle creating new Transaction and add it to Bloc
 - [ ] Handle contact picker and it's Tile
 - [ ] Style Amount Field well or change the design
