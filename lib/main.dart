@@ -62,7 +62,6 @@ Future<void> main() async {
           systemNavigationBarColor: darkColorScheme.surface,
           systemNavigationBarIconBrightness: Brightness.light,
         ));
-  //print(json.decode('{"categories": [1, 2, 3, 4]}'));  // Add localStorage Repo to provider
   runApp(RepositoryProvider<InternalStorage>(
       create: (_) => localStorage,
       child: MultiRepositoryProvider(
@@ -77,21 +76,7 @@ Future<void> main() async {
           )
         ],
         child: const MyApp(),
-      )
-      // BlocListener<TrackCollectionBloc, TrackCollectionState>(
-      //     listenWhen: (previous, current) =>
-      //         previous.status != current.status ||
-      //         previous.data.length != current.data.length ||
-      //         previous.name != current.name,
-      //     listener: (context, state) {
-      //       print('After listening ${state.status}');
-      //       if (state.status == TrackCreationStatus.failure) {
-      //         ScaffoldMessenger.of(context).showSnackBar(snackBar(context,
-      //             title: 'Error in listener', onPressed: () {}));
-      //       }
-      //     }),
-
-      ));
+      )));
 }
 
 class MyApp extends StatelessWidget {
@@ -282,6 +267,7 @@ class _AppContainerState extends State<AppContainer> {
       ViewBootStrap(
         MultiBlocProvider(providers: [
           BlocProvider(
+            lazy: false,
             create: (context) => BlocProvider.of<TransactionsBloc>(context),
           ),
         ], child: const QueriesView()),

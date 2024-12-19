@@ -76,8 +76,9 @@ class CategoryBloc extends Bloc<CategoriesEvent, CategoriesState> {
       try {
         emit(_repo.copyWith(status: CategoryStatus.progress));
         final newState = await _plugin.loadData();
-        if (newState.event is BlocError) {
-          event = newState.event as BlocError;
+        final newEvent = newState.event;
+        if (newEvent is BlocError && newEvent != null) {
+          event = newEvent;
           throw Error();
         }
         if (newState.data.isEmpty && newState.event is BlocDone) {

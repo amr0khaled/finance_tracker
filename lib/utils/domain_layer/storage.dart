@@ -33,7 +33,15 @@ class InternalStorage extends InternalStorageAPI {
   late Map<String, dynamic> _lastRemoved;
   late List<Map<String, dynamic>> _data = [];
   static String kStorage = '__storage__';
-  InternalStorage(SharedPreferencesWithCache plugin) : _plugin = plugin;
+  InternalStorage(SharedPreferencesWithCache plugin) : _plugin = plugin {
+    final ob = _plugin.getStringList(kStorage);
+    if (_data.isEmpty && ob != null) {
+      for (var s in ob) {
+        final ob_ = json.decode(s) as Map<String, dynamic>;
+        _data.add(ob_);
+      }
+    }
+  }
   List<Map<String, dynamic>> get data => _data;
 
   @override

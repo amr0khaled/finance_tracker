@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:finance_tracker/components/popup_transaction.dart';
+import 'package:finance_tracker/utils/categories/bloc.dart';
 import 'package:finance_tracker/utils/categories/storage.dart';
+import 'package:finance_tracker/utils/event_handling/error.dart';
 import 'package:finance_tracker/utils/transaction/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -221,10 +223,32 @@ class _RecentTransState extends State<RecentTrans> {
 
   @override
   Widget build(BuildContext context) {
+    final bloc = BlocProvider.of<TransactionsBloc>(context);
+    if (bloc.state.data.isEmpty && !bloc.isClosed) {
+      bloc.add(const LoadTransactionEvent());
+    }
+    {
+      print('Recent data: ${bloc.state.data}');
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: BlocBuilder<TransactionsBloc, Transactions>(
+      child: BlocConsumer<TransactionsBloc, Transactions>(
           bloc: BlocProvider.of<TransactionsBloc>(context),
+          listener: (context, state) {
+            var ev = state.event;
+            if (ev is BlocError ||
+                state.status == TransactionsStatus.error ||
+                ev != null) {
+              print('Error in BlocConsumer in RecentTrans');
+              print('Message: ${ev?.message}');
+              print('Data: ${state.data.length}');
+              if (ev is BlocError) {
+                print("ERR: ${ev.err}");
+                print("STACK: ${ev.stack}");
+              }
+            }
+          },
+          listenWhen: (p, n) => p.status != n.status || n.event is BlocError,
           builder: (context, state) {
             return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

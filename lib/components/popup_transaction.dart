@@ -94,15 +94,21 @@ class PopupTransaction extends StatelessWidget {
     return PopupDialog(
       title: title,
       mainAxisAlignment: MainAxisAlignment.start,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Expanded(
-          child: Text(
-            description,
-            style: const TextStyle(
-              fontSize: 18,
-            ),
-            textAlign: TextAlign.start,
+      child: Expanded(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              Text(
+                description,
+                style: const TextStyle(
+                  fontSize: 18,
+                ),
+              ),
+              //// Categories
+              //// Contact
+              ////
+            ],
           ),
         ),
       ),

@@ -109,6 +109,7 @@ class CategoryStorage {
 
   Future<CategoriesState> loadData() async {
     final ob = await _plugin.loadStore(_id);
+    print('Category loadData: ${ob}');
     late CategoriesState newState;
     if (ob['value'] != null) {
       newState = _data.copyWith(

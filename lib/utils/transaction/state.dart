@@ -3,31 +3,33 @@ part of 'bloc.dart';
 enum TransactionsStatus { initial, progress, done, error }
 
 class Transaction {
-  const Transaction(
+  Transaction(
       {required this.title,
       this.desc,
       required this.categories,
       required this.date,
-      required this.amount});
+      required this.amount,
+      this.contact});
   final String title;
   final String? desc;
   final List<CategoryData> categories;
   final String date;
   final int amount;
-  // final Contact contact;
+  Contact? contact;
   Transaction copyWith(
       {String? title,
       String? desc,
       List<CategoryData>? categories,
       String? date,
-      int? amount}) {
+      int? amount,
+      Contact? contact}) {
     return Transaction(
-      title: title ?? this.title,
-      desc: desc ?? this.desc,
-      categories: categories ?? this.categories,
-      date: date ?? this.date,
-      amount: amount ?? this.amount,
-    );
+        title: title ?? this.title,
+        desc: desc ?? this.desc,
+        categories: categories ?? this.categories,
+        date: date ?? this.date,
+        amount: amount ?? this.amount,
+        contact: contact ?? this.contact);
   }
 }
 
@@ -79,17 +81,18 @@ class Transactions {
       String? desc,
       List<CategoryData>? categories,
       String? date,
-      int? amount}) async {
+      int? amount,
+      Contact? contact}) async {
     var status = _data.indexOf(transaction);
     if (status != -1) {
       var transaction = _data.removeAt(status);
       var newTransaction = transaction.copyWith(
-        title: title,
-        desc: desc,
-        date: date,
-        categories: categories,
-        amount: amount,
-      );
+          title: title,
+          desc: desc,
+          date: date,
+          categories: categories,
+          amount: amount,
+          contact: contact);
       _data.insert(status, newTransaction);
       return BlocDone('Transaction ${transaction.title} has been edited');
     } else {

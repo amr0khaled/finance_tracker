@@ -22,13 +22,19 @@ class DeleteTransactionEvent extends TransactionsEvent {
 
 class EditTransactionEvent extends TransactionsEvent {
   EditTransactionEvent(this.transaction,
-      {this.title, this.desc, this.categories, this.date, this.amount});
+      {this.title,
+      this.desc,
+      this.categories,
+      this.date,
+      this.amount,
+      this.contact});
 
   String? title;
   String? desc;
   List<CategoryData>? categories;
   String? date;
   int? amount;
+  Contact? contact;
 
   final Transaction transaction;
   @override
